@@ -1,0 +1,437 @@
+<!doctype html>
+<html lang="zh-HK" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>HashKey Merchant — API Documentation</title>
+    <meta
+      name="description"
+      content="HashKey Merchant — 商戶加密貨幣支付網關 API 文檔"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-simple.css"
+    />
+    <style>
+      /* ═══════ Light mode (GitHub style) ═══════ */
+      :root {
+        --base-background-color: #ffffff;
+        --sidebar-background: #f6f8fa;
+        --sidebar-border-color: #d0d7de;
+        --sidebar-border-width: 1px;
+        --sidebar-name-color: #1f2328;
+        --sidebar-name-font-weight: 700;
+        --sidebar-nav-link-color: #1f2328;
+        --sidebar-nav-link-color--active: #0969da;
+        --sidebar-nav-link-border-color--active: #0969da;
+        --sidebar-nav-link-font-weight--active: 600;
+        --heading-color: #1f2328;
+        --base-color: #1f2328;
+        --base-font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica,
+          Arial, sans-serif;
+        --base-font-size: 16px;
+        --base-line-height: 1.6;
+        --code-font-family:
+          ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+          "Liberation Mono", monospace;
+        --code-font-size: 85%;
+        --code-inline-background: rgba(175, 184, 193, 0.2);
+        --code-inline-color: #1f2328;
+        --code-inline-border-radius: 6px;
+        --code-inline-padding: 0.2em 0.4em;
+        --code-block-background: #f6f8fa;
+        --code-block-border-radius: 6px;
+        --code-block-padding: 16px;
+        --link-color: #0969da;
+        --link-color--hover: #0550ae;
+        --link-text-decoration: none;
+        --link-text-decoration--hover: underline;
+        --blockquote-border-color: #d0d7de;
+        --blockquote-background: transparent;
+        --blockquote-color: #59636e;
+        --table-head-background: #f6f8fa;
+        --table-head-font-weight: 600;
+        --table-cell-border-color: #d0d7de;
+        --table-body-border-color: #d0d7de;
+        --notice-tip-border-color: #1a7f37;
+        --notice-tip-background: #dafbe1;
+        --notice-important-border-color: #9a6700;
+        --notice-important-background: #fff8c5;
+        --hr-border: 1px solid #d8dee4;
+      }
+
+      /* ═══════ Dark mode (GitHub dark) ═══════ */
+      [data-theme="dark"] {
+        --base-background-color: #0d1117;
+        --sidebar-background: #161b22;
+        --sidebar-border-color: #30363d;
+        --sidebar-name-color: #e6edf3;
+        --sidebar-nav-link-color: #e6edf3;
+        --sidebar-nav-link-color--active: #58a6ff;
+        --sidebar-nav-link-border-color--active: #58a6ff;
+        --heading-color: #e6edf3;
+        --base-color: #e6edf3;
+        --code-inline-background: rgba(110, 118, 129, 0.4);
+        --code-inline-color: #e6edf3;
+        --code-block-background: #161b22;
+        --link-color: #58a6ff;
+        --link-color--hover: #79c0ff;
+        --blockquote-border-color: #30363d;
+        --blockquote-color: #8b949e;
+        --table-head-background: #161b22;
+        --table-cell-border-color: #30363d;
+        --table-body-border-color: #30363d;
+        --notice-tip-border-color: #238636;
+        --notice-tip-background: rgba(46, 160, 67, 0.15);
+        --notice-important-border-color: #9e6a03;
+        --notice-important-background: rgba(187, 128, 9, 0.15);
+        --hr-border: 1px solid #21262d;
+      }
+
+      /* ═══════ Common overrides ═══════ */
+      .sidebar {
+        font-size: 13px;
+      }
+      .sidebar .app-name {
+        font-weight: 700;
+        font-size: 15px;
+        letter-spacing: -0.01em;
+      }
+      .markdown-section h1 {
+        border-bottom: 1px solid var(--table-cell-border-color);
+        padding-bottom: 0.3em;
+        font-weight: 600;
+      }
+      .markdown-section h2 {
+        border-bottom: 1px solid var(--table-cell-border-color);
+        padding-bottom: 0.3em;
+        font-weight: 600;
+      }
+      .markdown-section h3 {
+        font-weight: 600;
+      }
+      .markdown-section table {
+        font-size: 14px;
+      }
+      .markdown-section code {
+        font-size: var(--code-font-size);
+        border-radius: 6px;
+        padding: 0.2em 0.4em;
+      }
+      .markdown-section pre {
+        border: 1px solid var(--table-cell-border-color);
+        border-radius: 6px;
+        padding: 16px;
+      }
+      .markdown-section pre > code {
+        font-size: 13px;
+        border: none;
+        padding: 0;
+        background: transparent;
+      }
+      .markdown-section table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+      .markdown-section table th,
+      .markdown-section table td {
+        border: 1px solid var(--table-cell-border-color);
+        padding: 6px 13px;
+      }
+      .markdown-section blockquote {
+        border-left: 3px solid var(--blockquote-border-color);
+        color: var(--blockquote-color);
+        padding: 0 1em;
+      }
+
+      /* ═══════ GitHub-style alerts ═══════ */
+      .alert-callout {
+        padding: 12px 16px;
+        margin: 1em 0;
+        border-left: 4px solid;
+        border-radius: 6px;
+      }
+      .alert-callout .alert-title {
+        font-weight: 600;
+        margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .alert-callout .alert-title svg {
+        flex-shrink: 0;
+      }
+      .alert-callout p {
+        margin: 0.4em 0 0;
+      }
+
+      .alert-note {
+        border-color: #0969da;
+        background: rgba(9, 105, 218, 0.08);
+      }
+      .alert-note .alert-title {
+        color: #0969da;
+      }
+      .alert-tip {
+        border-color: #1a7f37;
+        background: rgba(26, 127, 55, 0.08);
+      }
+      .alert-tip .alert-title {
+        color: #1a7f37;
+      }
+      .alert-important {
+        border-color: #8250df;
+        background: rgba(130, 80, 223, 0.08);
+      }
+      .alert-important .alert-title {
+        color: #8250df;
+      }
+      .alert-warning {
+        border-color: #9a6700;
+        background: rgba(154, 103, 0, 0.08);
+      }
+      .alert-warning .alert-title {
+        color: #9a6700;
+      }
+      .alert-caution {
+        border-color: #cf222e;
+        background: rgba(207, 34, 46, 0.08);
+      }
+      .alert-caution .alert-title {
+        color: #cf222e;
+      }
+
+      [data-theme="dark"] .alert-note {
+        background: rgba(56, 139, 253, 0.12);
+        border-color: #388bfd;
+      }
+      [data-theme="dark"] .alert-note .alert-title {
+        color: #58a6ff;
+      }
+      [data-theme="dark"] .alert-tip {
+        background: rgba(46, 160, 67, 0.12);
+        border-color: #2ea043;
+      }
+      [data-theme="dark"] .alert-tip .alert-title {
+        color: #3fb950;
+      }
+      [data-theme="dark"] .alert-important {
+        background: rgba(163, 113, 247, 0.12);
+        border-color: #a371f7;
+      }
+      [data-theme="dark"] .alert-important .alert-title {
+        color: #a371f7;
+      }
+      [data-theme="dark"] .alert-warning {
+        background: rgba(187, 128, 9, 0.12);
+        border-color: #bb8009;
+      }
+      [data-theme="dark"] .alert-warning .alert-title {
+        color: #d29922;
+      }
+      [data-theme="dark"] .alert-caution {
+        background: rgba(248, 81, 73, 0.12);
+        border-color: #f85149;
+      }
+      [data-theme="dark"] .alert-caution .alert-title {
+        color: #f85149;
+      }
+
+      /* ═══════ Mermaid diagrams ═══════ */
+      .mermaid {
+        text-align: center;
+        margin: 1.5em 0;
+      }
+      .mermaid svg {
+        max-width: 100%;
+        height: auto;
+      }
+
+      /* ═══════ Theme toggle button ═══════ */
+      .theme-toggle {
+        position: fixed;
+        top: 14px;
+        right: 20px;
+        z-index: 99;
+        width: 36px;
+        height: 36px;
+        border: 1px solid var(--sidebar-border-color);
+        border-radius: 8px;
+        background: var(--sidebar-background);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        line-height: 1;
+        transition:
+          background 0.2s,
+          border-color 0.2s;
+      }
+      .theme-toggle:hover {
+        border-color: var(--link-color);
+      }
+      .theme-toggle .icon-sun,
+      .theme-toggle .icon-moon {
+        display: none;
+      }
+      [data-theme="light"] .theme-toggle .icon-moon {
+        display: inline;
+      }
+      [data-theme="dark"] .theme-toggle .icon-sun {
+        display: inline;
+      }
+
+      .lang-switch {
+        position: fixed;
+        top: 14px;
+        right: 64px;
+        z-index: 99;
+        font-size: 13px;
+        line-height: 36px;
+        color: var(--base-color);
+      }
+      .lang-switch a {
+        color: var(--link-color);
+        text-decoration: none;
+      }
+      .lang-switch a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="lang-switch">
+      <span>繁體中文</span>
+      ·
+      <a href="en/index.html">English</a>
+    </div>
+    <button class="theme-toggle" onclick="toggleTheme()" title="切換淺色／深色模式">
+      <span class="icon-sun">☀️</span>
+      <span class="icon-moon">🌙</span>
+    </button>
+    <div id="app"></div>
+    <script>
+      // Theme persistence
+      (function () {
+        var saved = localStorage.getItem("docs-theme");
+        if (!saved) {
+          saved = window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light";
+        }
+        document.documentElement.setAttribute("data-theme", saved);
+      })();
+
+      function toggleTheme() {
+        var current = document.documentElement.getAttribute("data-theme");
+        var next = current === "dark" ? "light" : "dark";
+        document.documentElement.setAttribute("data-theme", next);
+        localStorage.setItem("docs-theme", next);
+        if (typeof mermaid !== "undefined") {
+          mermaid.initialize({ theme: next === "dark" ? "dark" : "default" });
+          mermaid.run({ querySelector: ".mermaid" });
+        }
+      }
+
+      window.$docsify = {
+        name: "HashKey Merchant",
+        repo: "",
+        basePath: "./docs/zh-HK/",
+        loadSidebar: true,
+        subMaxLevel: 3,
+        auto2top: true,
+        search: {
+          placeholder: "搜尋文件",
+          noData: "沒有找到結果",
+          paths: "auto",
+        },
+        copyCode: {
+          buttonText: "複製",
+          successText: "已複製",
+        },
+        pagination: {
+          previousText: "上一章",
+          nextText: "下一章",
+          crossChapter: true,
+        },
+        markdown: {
+          renderer: {
+            code: function (code, lang) {
+              if (lang === "mermaid") {
+                return '<div class="mermaid">' + code + "</div>";
+              }
+              return this.origin.code.apply(this, arguments);
+            },
+          },
+        },
+        plugins: [
+          function alertPlugin(hook) {
+            var icons = {
+              NOTE: '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8Zm8-6.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13ZM6.5 7.75A.75.75 0 0 1 7.25 7h1a.75.75 0 0 1 .75.75v2.75h.25a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1 0-1.5h.25v-2h-.25a.75.75 0 0 1-.75-.75ZM8 6a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"/></svg>',
+              TIP: '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5c-2.363 0-4 1.69-4 3.75 0 .984.424 1.625.984 2.304l.214.253c.223.264.47.556.673.848.284.411.537.896.621 1.49a.75.75 0 0 1-1.484.211c-.04-.282-.163-.547-.37-.847a8.456 8.456 0 0 0-.542-.68c-.084-.1-.173-.205-.268-.32C3.201 7.75 2.5 6.766 2.5 5.25 2.5 2.31 4.863 0 8 0s5.5 2.31 5.5 5.25c0 1.516-.701 2.5-1.328 3.259-.095.115-.184.22-.268.319-.207.245-.383.453-.541.681-.208.3-.33.565-.37.847a.751.751 0 0 1-1.485-.212c.084-.593.337-1.078.621-1.489.203-.292.45-.584.673-.848.075-.088.147-.173.213-.253.561-.679.985-1.32.985-2.304 0-2.06-1.637-3.75-4-3.75ZM5.75 12h4.5a.75.75 0 0 1 0 1.5h-4.5a.75.75 0 0 1 0-1.5ZM6 15.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 0 1.5h-2.5a.75.75 0 0 1-.75-.75Z"/></svg>',
+              IMPORTANT:
+                '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M0 1.75C0 .784.784 0 1.75 0h12.5C15.216 0 16 .784 16 1.75v9.5A1.75 1.75 0 0 1 14.25 13H8.06l-2.573 2.573A1.458 1.458 0 0 1 3 14.543V13H1.75A1.75 1.75 0 0 1 0 11.25Zm1.75-.25a.25.25 0 0 0-.25.25v9.5c0 .138.112.25.25.25h2a.75.75 0 0 1 .75.75v2.19l2.72-2.72a.749.749 0 0 1 .53-.22h6.5a.25.25 0 0 0 .25-.25v-9.5a.25.25 0 0 0-.25-.25Zm7 2.25v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 9a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"/></svg>',
+              WARNING:
+                '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M6.457 1.047c.659-1.234 2.427-1.234 3.086 0l6.082 11.378A1.75 1.75 0 0 1 14.082 15H1.918a1.75 1.75 0 0 1-1.543-2.575Zm1.763.707a.25.25 0 0 0-.44 0L1.698 13.132a.25.25 0 0 0 .22.368h12.164a.25.25 0 0 0 .22-.368Zm.53 3.996v2.5a.75.75 0 0 1-1.5 0v-2.5a.75.75 0 0 1 1.5 0ZM9 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"/></svg>',
+              CAUTION:
+                '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M4.47.22A.749.749 0 0 1 5 0h6c.199 0 .389.079.53.22l4.25 4.25c.141.14.22.331.22.53v6a.749.749 0 0 1-.22.53l-4.25 4.25A.749.749 0 0 1 11 16H5a.749.749 0 0 1-.53-.22L.22 11.53A.749.749 0 0 1 0 11V5c0-.199.079-.389.22-.53Zm.84 1.28L1.5 5.31v5.38l3.81 3.81h5.38l3.81-3.81V5.31L10.69 1.5ZM8 4a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 8 4Zm0 8a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"/></svg>',
+            };
+            var labels = {
+              NOTE: "Note",
+              TIP: "Tip",
+              IMPORTANT: "Important",
+              WARNING: "Warning",
+              CAUTION: "Caution",
+            };
+            hook.afterEach(function (html) {
+              return html.replace(
+                /<blockquote>[\s]*<p>\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\][\s]*(?:<br\s*\/?>|\n)([\s\S]*?)<\/p>[\s]*<\/blockquote>/gi,
+                function (_, type, content) {
+                  var t = type.toUpperCase();
+                  return (
+                    '<div class="alert-callout alert-' +
+                    t.toLowerCase() +
+                    '"><p class="alert-title">' +
+                    (icons[t] || "") +
+                    " " +
+                    labels[t] +
+                    "</p><p>" +
+                    content.trim() +
+                    "</p></div>"
+                  );
+                },
+              );
+            });
+          },
+          function mermaidPlugin(hook) {
+            hook.doneEach(function () {
+              mermaid.run({ querySelector: ".mermaid" });
+            });
+          },
+        ],
+      };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+    <script>
+      mermaid.initialize({
+        startOnLoad: false,
+        theme:
+          document.documentElement.getAttribute("data-theme") === "dark"
+            ? "dark"
+            : "default",
+        sequence: { mirrorActors: false },
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/docsify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/search.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/docsify-copy-code@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/docsify-pagination@2/dist/docsify-pagination.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-bash.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-go.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-json.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-javascript.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-typescript.min.js"></script>
+  </body>
+</html>
