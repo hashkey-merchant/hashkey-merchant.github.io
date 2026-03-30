@@ -36,8 +36,6 @@ openssl ec -in merchant_private_key.pem -pubout -out merchant_public_key.pem
 | `email` | 是 | 管理員電郵 | `admin@acme.com` |
 | `description` | 否 | 機構描述 | `Acme 支付業務團隊` |
 | `default_language` | 是 | 預設語言 | `zh-HK` / `en` |
-| `service_type` | 是 | 服務費方式 | `free` / `price_include` / `price_extra` |
-| `service_rate` | 是 | 服務費率（保留 4 位小數） | `0.0000` |
 | `public_key` | 是 | 商戶公鑰（PEM 格式） | `-----BEGIN PUBLIC KEY-----...` |
 | `supported_chain_tokens` | 是 | 支援的鏈／幣種清單（至少 1 項） | 見下方 |
 
