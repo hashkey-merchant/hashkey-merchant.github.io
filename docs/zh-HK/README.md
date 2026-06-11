@@ -41,7 +41,7 @@ graph LR
         MB[Merchant Backend]
     end
 
-    subgraph "Hashkey Merchant 網關"
+    subgraph "Merchant 網關"
         direction TB
         MA["/api/v1/merchant/<br/>orders（建立支付訂單）<br/>payments（查詢記錄）"]
         PA["/api/v1/payment/<br/>pay-mandate（提交授權）<br/>flow/:id（查詢狀態）"]
@@ -72,23 +72,23 @@ sequenceDiagram
         participant User as User/Browser
         participant Web as Web Service
     end
-    participant SDK as HashKeyMerchant SDK or API
-    participant GW as HashKeyMerchant Gateway
+    participant SDK as Merchant SDK or API
+    participant GW as Merchant Gateway
     participant BC as Blockchain
 
     User ->> Web: 1. Request Payment
 
     Web ->> SDK: 2 組裝支付交易資訊：<br/> 對應 UI 資訊<br/>支援鏈資訊／網絡 chain 資訊 <br/> 支付成功跳轉地址 <br/> 支付金額
 
-    SDK ->> GW: 3. 傳送至 HP2 網關
+    SDK ->> GW: 3. 傳送至 Merchant 網關
     Note right of GW: 3. 校驗並產生 flow_id 儲存資料
 
-    GW -->> Web: 4.1 返回：產生 HashKey Merchant 收銀台地址
+    GW -->> Web: 4.1 返回：產生 Merchant 收銀台地址
     Web -->> User: 4.2 平台網頁自動跳轉至收銀台地址
 
-    Note over User: 用戶進入 HashKey Merchant 收銀台地址<br/>選擇支付方式，使用錢包簽章授權
+    Note over User: 用戶進入 Merchant 收銀台地址<br/>選擇支付方式，使用錢包簽章授權
 
-    User ->> GW: 5. HashKey Merchant 收銀台組裝 PaymentMandate<br/>交易送交 HashKey Merchant 網關 settle payment
+    User ->> GW: 5. Merchant 收銀台組裝 PaymentMandate<br/>交易送交 Merchant 網關 settle payment
     Note over GW: 驗證支付請求
 
     GW ->> BC: 6.1 傳送交易至對應區塊鏈網絡
@@ -134,7 +134,7 @@ HashKey Merchant 所採用的 **Cart Mandate** 與結帳／鏈上流程中的 **
 
 **Payment Mandate** 代表**用戶依該 Cart Mandate** 在結帳流程中，以錢包完成簽署後所產生的**支付／鏈上轉帳授權**——即用戶同意按 Cart Mandate 所載條件執行實際扣款或鏈上轉帳。
 
-本系統欄位與流程細節以 [Cart Mandate 組裝](cart-mandate.md) 及 [API 接口](api-reference.md) 為準。
+本系統欄位與流程細節以 [Cart Mandate 組裝](cart-mandate.md) 及 [API 文件](api-reference.md) 為準。
 
 ---
 
@@ -142,9 +142,8 @@ HashKey Merchant 所採用的 **Cart Mandate** 與結帳／鏈上流程中的 **
 
 - **[商戶對接流程](onboarding.md)** — 註冊、金鑰產生、憑證取得
 - **[認證與簽章](authentication.md)** — HMAC-SHA256 簽章 + ES256K JWT
-- **[API 接口](api-reference.md)** — 全部 Merchant API 參考
+- **[API 文件](api-reference.md)** — 全部 Merchant API 參考
 - **[Cart Mandate 組裝](cart-mandate.md)** — 資料結構、Canonical JSON、簽章
 - **[Webhook 回呼](webhook.md)** — 回呼格式、簽章驗證、重試機制
-- **[Go SDK 整合](sdk.md)** — SDK 安裝、設定、範例程式碼
 - **[附錄](appendix.md)** — 錯誤碼、支援網絡、更新日誌
 - **AP2 規格（外部）** — [ap2-protocol.org/specification](https://ap2-protocol.org/specification/)

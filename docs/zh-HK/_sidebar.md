@@ -6,7 +6,7 @@
   - [認證與簽章](authentication.md)
 
 - **API 參考**
-  - [API 接口](api-reference.md)
+  - [API 文件](api-reference.md)
 
 - **資料規格**
   - [Cart Mandate 組裝](cart-mandate.md)

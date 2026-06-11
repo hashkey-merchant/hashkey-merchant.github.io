@@ -188,7 +188,7 @@ GET /api/v1/merchant/payments?flow_id=b660fdc3-ac04-437f-921f-efbfb8d089f7
       "chain": "eip155:11155111",
       "network": "sepolia",
       "extra_protocol": "eip3009",
-      "status": "payment-successful",
+      "status": "payment-finalized",
       "payer_address": "0x1234...",
       "to_pay_address": "0x99c1...",
       "risk_level": "Low",
@@ -254,7 +254,7 @@ GET /api/v1/merchant/payments/reusable?request_id=req_20240301_abc123
         "token": "USDC",
         "chain": "eip155:11155111",
         "network": "sepolia",
-        "status": "payment-successful",
+        "status": "payment-finalized",
         "payer_address": "0x1234...",
         "to_pay_address": "0x99c1...",
         "tx_signature": "0xabcd...",
@@ -300,7 +300,7 @@ Returned on all payment queries (`PaymentItemResponse`):
 | `payer_address` | string | Payer |
 | `to_pay_address` | string | Payee |
 | `risk_level` | string | AML risk |
-| `tx_signature` | string | Tx hash when successful |
+| `tx_signature` | string | Tx hash once included on chain |
 | `broadcast_at` | string? | First broadcast time |
 | `gas_limit` | int | Gas limit |
 | `gas_fee` | string | Gas fee |
@@ -310,7 +310,7 @@ Returned on all payment queries (`PaymentItemResponse`):
 | `deadline_time` | string | Payment deadline |
 | `created_at` | string | Created |
 | `updated_at` | string | Updated |
-| `completed_at` | string? | Completed when successful |
+| `completed_at` | string? | Set when status is `payment-finalized` |
 
 ---
 

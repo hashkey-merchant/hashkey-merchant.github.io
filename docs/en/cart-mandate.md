@@ -189,9 +189,11 @@ stateDiagram-v2
     payment_verified --> payment_processing
     payment_processing --> payment_included
     payment_processing --> payment_failed
-    payment_included --> payment_successful
+    payment_included --> payment_safe
     payment_included --> payment_failed
-    payment_successful --> [*]
+    payment_safe --> payment_finalized
+    payment_safe --> payment_failed
+    payment_finalized --> [*]
     payment_failed --> [*]
 ```
 
@@ -201,13 +203,16 @@ stateDiagram-v2
 | `payment-submitted` | Authorization submitted | No |
 | `payment-verified` | Authorization verified | No |
 | `payment-processing` | On-chain in flight | No |
-| `payment-included` | Included in a block; confirmations pending | No |
-| `payment-successful` | Required confirmations met; successful execution | **Yes** |
+| `payment-included` | Included in a block; awaiting safe or finality confirmation | No |
+| `payment-safe` | Safe confirmation depth reached; block reorganization risk is extremely low | No |
+| `payment-finalized` | Block finality confirmed; transaction irreversible | **Yes** |
 | `payment-failed` | Failed | **Yes** |
 
 > [!NOTE]
-> Watch `payment-included`, `payment-successful`, and `payment-failed`.
+> Watch `payment-included`, `payment-safe`, `payment-finalized`, and `payment-failed`.
 >
-> For small amounts or instant fulfillment, `payment-included` is often sufficient; rare reorgs can still fail the tx—otherwise wait for `payment-successful` (often ~20–60 minutes).
+> **Block reorganization** (reorg): when a competing fork becomes the canonical chain, transactions on the displaced chain can be reversed.
 >
-> `payment-successful` / `payment-failed` are the true terminal states.
+> For small amounts or instant fulfillment, `payment-included` is often sufficient; `payment-safe` means safe confirmation depth is met and block reorganization risk is extremely low; wait for `payment-finalized` when you need irreversible settlement.
+>
+> `payment-finalized` / `payment-failed` are the terminal states.

@@ -36,6 +36,8 @@ Provide the following to operations so they can create an organization invite:
 | `email` | Yes | Admin email | `admin@acme.com` |
 | `description` | No | Description | `Acme payments team` |
 | `default_language` | Yes | Default language | `zh-HK` / `en` |
+| `service_type` | Yes | Fee model | `free` / `price_include` / `price_extra` |
+| `service_rate` | Yes | Service rate (4 decimal places) | `0.0000` |
 | `public_key` | Yes | Merchant public key (PEM) | `-----BEGIN PUBLIC KEY-----...` |
 | `supported_chain_tokens` | Yes | Supported chain/token list (≥1 row) | See below |
 
@@ -56,7 +58,7 @@ Provide the following to operations so they can create an organization invite:
 | sepolia | 11155111 | USDC | `0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238` | 6 | Yes | EIP-3009 |
 | sepolia | 11155111 | USDT | `0xff5588b3b38dff1b4b49bfdcbf985e84d8751a0e` | 6 | Yes | Permit2 |
 | sepolia | 11155111 | HSK | `0x31bdac8e4b897e470b70ebe286f94245baa793c2` | 18 | No | Permit2 |
-| hashkey-testnet | 133 | USDC | `0x79AEc4EeA31D50792F61D1Ca0733C18c89524C9e` | 6 | Yes | EIP-3009 |
+| hashkey-testnet | 133 | USDC | `0x8FE3cB719Ee4410E236Cd6b72ab1fCDC06eF53c6` | 6 | Yes | EIP-3009 |
 | hashkey-testnet | 133 | USDT | `0x372325443233fEbaC1F6998aC750276468c83CC6` | 6 | Yes | Permit2 |
 
 After the invite is created, the admin receives an email link to finish registration and bind the organization.

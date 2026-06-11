@@ -10,38 +10,49 @@ Cart Mandate 是核心支付請求資料結構，包含訂單資訊、支付方�
 {
   "cart_mandate": {
     "contents": {
-      "id": "ORDER-001",                         // cart_mandate_id (ID1)
+      "id": "ORDER-001", // cart_mandate_id (ID1)
       "user_cart_confirmation_required": true,
       "payment_request": {
-        "method_data": [{                         // 支付方式清單
-          "supported_methods": "https://www.x402.org/",
-          "data": {
-            "x402Version": 2,
-            "network": "sepolia",
-            "chain_id": 11155111,
-            "contract_address": "0x1c7D...",
-            "pay_to": "0x99c1...",                // 收款地址
-            "coin": "USDC"
+        "method_data": [
+          {
+            // 支付方式清單
+            "supported_methods": "https://www.x402.org/",
+            "data": {
+              "x402Version": 2,
+              "network": "sepolia",
+              "chain_id": 11155111,
+              "contract_address": "0x1c7D...",
+              "pay_to": "0x99c1...", // 收款地址
+              "coin": "USDC"
+            }
           }
-        }],
+        ],
         "details": {
-          "id": "PAY-REQ-001",                    // payment_request_id (ID2)
-          "display_items": [                      // 商品明細
-            {"label": "商品 A", "amount": {"currency": "USD", "value": "10.00"}},
-            {"label": "商品 B", "amount": {"currency": "USD", "value": "5.00"}}
+          "id": "PAY-REQ-001", // payment_request_id (ID2)
+          "display_items": [
+            // 商品明細
+            {
+              "label": "商品 A",
+              "amount": { "currency": "USD", "value": "10.00" }
+            },
+            {
+              "label": "商品 B",
+              "amount": { "currency": "USD", "value": "5.00" }
+            }
           ],
-          "total": {                              // 總金額
+          "total": {
+            // 總金額
             "label": "總計",
-            "amount": {"currency": "USD", "value": "15.00"}
+            "amount": { "currency": "USD", "value": "15.00" }
           }
         }
       },
-      "cart_expiry": "2024-03-01T12:00:00Z",      // RFC 3339 過期時間
+      "cart_expiry": "2024-03-01T12:00:00Z", // RFC 3339 過期時間
       "merchant_name": "My Store"
     },
-    "merchant_authorization": "eyJhbG..."          // ES256K JWT
+    "merchant_authorization": "eyJhbG..." // ES256K JWT
   },
-  "redirect_url": "https://yoursite.com/redirect"  // 選填
+  "redirect_url": "https://yoursite.com/redirect" // 選填
 }
 ```
 
@@ -51,47 +62,47 @@ Cart Mandate 是核心支付請求資料結構，包含訂單資訊、支付方�
 
 ### contents（購物車內容）
 
-| 欄位 | 類型 | 必填 | 說明 |
-|------|------|------|------|
-| `id` | string | 是 | 訂單唯一識別（`cart_mandate_id`，ID1），商戶自訂 |
-| `user_cart_confirmation_required` | bool | 是 | 是否需要用戶確認購物車 |
-| `payment_request` | object | 是 | 支付請求資訊 |
-| `cart_expiry` | string | 是 | 授權過期時間（RFC 3339 格式） |
-| `merchant_name` | string | 是 | 商戶名稱 |
+| 欄位                              | 類型   | 必填 | 說明                                             |
+| --------------------------------- | ------ | ---- | ------------------------------------------------ |
+| `id`                              | string | 是   | 訂單唯一識別（`cart_mandate_id`，ID1），商戶自訂 |
+| `user_cart_confirmation_required` | bool   | 是   | 是否需要用戶確認購物車                           |
+| `payment_request`                 | object | 是   | 支付請求資訊                                     |
+| `cart_expiry`                     | string | 是   | 授權過期時間（RFC 3339 格式）                    |
+| `merchant_name`                   | string | 是   | 商戶名稱                                         |
 
 ### method_data（支付方式）
 
 每個 `method_data` 項定義一種可接受的支付方式。現時支援 **x402** 協議；下方為相關欄位說明：
 
-| 欄位 | 類型 | 必填 | 說明 |
-|------|------|------|------|
-| `supported_methods` | string | 是 | 固定為 `"https://www.x402.org/"` |
-| `data.x402Version` | int | 是 | 固定為 `2` |
-| `data.network` | string | 是 | 網絡名稱（如 `sepolia`、`ethereum`） |
-| `data.chain_id` | int | 是 | 鏈 ID（如 `11155111`） |
-| `data.contract_address` | string | 是 | 代幣合約地址 |
-| `data.pay_to` | string | 是 | 收款地址 |
-| `data.coin` | string | 是 | 代幣符號（如 `USDC`、`USDT`） |
+| 欄位                    | 類型   | 必填 | 說明                                 |
+| ----------------------- | ------ | ---- | ------------------------------------ |
+| `supported_methods`     | string | 是   | 固定為 `"https://www.x402.org/"`     |
+| `data.x402Version`      | int    | 是   | 固定為 `2`                           |
+| `data.network`          | string | 是   | 網絡名稱（如 `sepolia`、`ethereum`） |
+| `data.chain_id`         | int    | 是   | 鏈 ID（如 `11155111`）               |
+| `data.contract_address` | string | 是   | 代幣合約地址                         |
+| `data.pay_to`           | string | 是   | 收款地址                             |
+| `data.coin`             | string | 是   | 代幣符號（如 `USDC`、`USDT`）        |
 
 > [!TIP]
 > 可設定多個 `method_data` 項以支援多鏈／多幣種支付，用戶於支付頁面選擇。
 
 ### details（支付明細）
 
-| 欄位 | 類型 | 必填 | 說明 |
-|------|------|------|------|
-| `id` | string | 是 | 支付請求 ID（`payment_request_id`，ID2） |
-| `display_items` | array | 否 | 商品明細清單，每項包含 `label` 與 `amount` |
-| `total` | object | 是 | 總金額，包含 `label` 與 `amount`（`currency` + `value`） |
-| `shipping_options` | array | 否 | 配送選項 |
-| `modifiers` | array | 否 | 支付修改器 |
+| 欄位               | 類型   | 必填 | 說明                                                     |
+| ------------------ | ------ | ---- | -------------------------------------------------------- |
+| `id`               | string | 是   | 支付請求 ID（`payment_request_id`，ID2）                 |
+| `display_items`    | array  | 否   | 商品明細清單，每項包含 `label` 與 `amount`               |
+| `total`            | object | 是   | 總金額，包含 `label` 與 `amount`（`currency` + `value`） |
+| `shipping_options` | array  | 否   | 配送選項                                                 |
+| `modifiers`        | array  | 否   | 支付修改器                                               |
 
 ### cart_expiry 有效期建議
 
-| 場景 | 建議值 | 說明 |
-|------|--------|------|
-| **單次支付訂單**（網購） | 2 小時 | 涵蓋用戶完成支付的合理時間範圍 |
-| **可重複支付訂單**（裝置租賃） | 365 天或更長 | 涵蓋整個業務生命週期 |
+| 場景                           | 建議值       | 說明                           |
+| ------------------------------ | ------------ | ------------------------------ |
+| **單次支付訂單**（網購）       | 2 小時       | 涵蓋用戶完成支付的合理時間範圍 |
+| **可重複支付訂單**（裝置租賃） | 365 天或更長 | 涵蓋整個業務生命週期           |
 
 > [!IMPORTANT]
 > `cart_expiry` 設定過短會導致支付授權過期。可重複支付訂單場景若設定 2 小時，翌日即無法發起新支付。
@@ -189,25 +200,30 @@ stateDiagram-v2
     payment_verified --> payment_processing
     payment_processing --> payment_included
     payment_processing --> payment_failed
-    payment_included --> payment_successful
+    payment_included --> payment_safe
     payment_included --> payment_failed
-    payment_successful --> [*]
+    payment_safe --> payment_finalized
+    payment_safe --> payment_failed
+    payment_finalized --> [*]
     payment_failed --> [*]
 ```
 
-| 狀態 | 說明 | 終態 |
-|------|------|------|
-| `payment-required` | 支付要求已建立，等待用戶支付 | 否 |
-| `payment-submitted` | 用戶已提交支付授權 | 否 |
-| `payment-verified` | 支付授權已驗證 | 否 |
-| `payment-processing` | 鏈上交易處理中 | 否 |
-| `payment-included` | 鏈上交易已打包（交易已被礦工打包進區塊，但尚未達到足夠的區塊確認數） | 否 |
-| `payment-successful` | 支付完成（鏈上交易已達所需確認數，`tx_signature` 已寫入且交易執行成功） | **是** |
-| `payment-failed` | 支付失敗 | **是** |
+| 狀態                   | 說明                                       | 終態   |
+| ---------------------- | ------------------------------------------ | ------ |
+| `payment-required`     | 支付要求已建立，等待用戶支付               | 否     |
+| `payment-submitted`    | 用戶已提交支付授權                         | 否     |
+| `payment-verified`     | 支付授權已驗證                             | 否     |
+| `payment-processing`   | 鏈上交易處理中                             | 否     |
+| `payment-included`     | 交易已打包，等待安全確認或最終性確認       | 否     |
+| `payment-safe`         | 交易已達安全確認塊數，區塊重組風險極低     | 否     |
+| `payment-finalized`    | 區塊最終性已確認，交易不可逆               | **是** |
+| `payment-failed`       | 支付失敗                                   | **是** |
 
 > [!NOTE]
-> 商戶需關注 `payment-included`／`payment-successful`／`payment-failed` 三個狀態。
+> 商戶需關注 `payment-included`／`payment-safe`／`payment-finalized`／`payment-failed` 四個狀態。
 >
-> `payment-included` 在小額支付／即時使用場景下即可視為支付成功；極少數情況會因區塊回滾導致交易失敗，其他情況可等待 `successful` 狀態，通常約 20 分鐘至 1 小時。
+> **區塊重組**（chain reorganization，簡稱 reorg）：區塊鏈出現分叉且較長鏈取代現有鏈時，較短鏈上已確認的交易可能被撤銷。
 >
-> `payment-successful`／`payment-failed` 代表支付的最終狀態。
+> `payment-included` 在小額支付／即時使用場景下即可視為支付成功；`payment-safe` 表示已達安全確認深度，區塊重組風險極低，適合一般金額；高風險或需絕對不可逆時，請等待 `payment-finalized`。
+>
+> `payment-finalized`／`payment-failed` 代表支付的最終狀態。

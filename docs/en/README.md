@@ -10,26 +10,26 @@ Through standardized RESTful APIs, your backend can quickly create payment order
 
 ## Key features
 
-| Feature | Description |
-|---------|-------------|
-| **One-time payment orders** | For e-commerce checkouts, one-off fees, and similar flows—each order maps to a single payment |
-| **Reusable payment orders** | For device rental, vending, subscription charges—multiple independent payments under one mandate |
-| **Webhook notifications** | Push callbacks after a terminal state, with HMAC-SHA256 verification and up to 6 exponential-backoff retries |
-| **Multi-chain & multi-asset** | Ethereum, HashKey Chain, and more; USDC, USDT, and other major stablecoins |
-| **HMAC-SHA256 authentication** | All Merchant APIs are protected with HMAC signatures and replay protection |
-| **ES256K JWT signing** | Merchant authorization uses secp256k1, aligned with the broader blockchain ecosystem |
+| Feature                        | Description                                                                                                  |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| **One-time payment orders**    | For e-commerce checkouts, one-off fees, and similar flows—each order maps to a single payment                |
+| **Reusable payment orders**    | For device rental, vending, subscription charges—multiple independent payments under one mandate             |
+| **Webhook notifications**      | Push callbacks after a terminal state, with HMAC-SHA256 verification and up to 6 exponential-backoff retries |
+| **Multi-chain & multi-asset**  | Ethereum, HashKey Chain, and more; USDC, USDT, and other major stablecoins                                   |
+| **HMAC-SHA256 authentication** | All Merchant APIs are protected with HMAC signatures and replay protection                                   |
+| **ES256K JWT signing**         | Merchant authorization uses secp256k1, aligned with the broader blockchain ecosystem                         |
 
 ---
 
 ## One-time vs reusable payment orders
 
-| Aspect | One-time order | Reusable order |
-|--------|----------------|----------------|
-| **Typical use** | E-commerce, one-off fees, online purchases | Device rental, vending, subscription charges |
-| **Payments** | One `cart_mandate_id` → one payment | One `cart_mandate_id` → many payments |
-| **Create** | `POST /merchant/orders` | `POST /merchant/orders/reusable` |
-| **Query** | `GET /merchant/payments` | `GET /merchant/payments/reusable` |
-| **`cart_expiry` guidance** | ~2 hours | Cover the full business lifecycle (e.g. 365 days) |
+| Aspect                     | One-time order                             | Reusable order                                    |
+| -------------------------- | ------------------------------------------ | ------------------------------------------------- |
+| **Typical use**            | E-commerce, one-off fees, online purchases | Device rental, vending, subscription charges      |
+| **Payments**               | One `cart_mandate_id` → one payment        | One `cart_mandate_id` → many payments             |
+| **Create**                 | `POST /merchant/orders`                    | `POST /merchant/orders/reusable`                  |
+| **Query**                  | `GET /merchant/payments`                   | `GET /merchant/payments/reusable`                 |
+| **`cart_expiry` guidance** | ~2 hours                                   | Cover the full business lifecycle (e.g. 365 days) |
 
 ---
 
@@ -41,7 +41,7 @@ graph LR
         MB[Merchant Backend]
     end
 
-    subgraph "Hashkey Merchant gateway"
+    subgraph "Merchant gateway"
         direction TB
         MA["/api/v1/merchant/<br/>orders (create)<br/>payments (query)"]
         PA["/api/v1/payment/<br/>pay-mandate (submit)<br/>flow/:id (status)"]
@@ -72,18 +72,18 @@ sequenceDiagram
         participant User as User/Browser
         participant Web as Web Service
     end
-    participant SDK as HashKeyMerchant SDK or API
-    participant GW as HashKeyMerchant Gateway
+    participant SDK as Merchant SDK or API
+    participant GW as Merchant Gateway
     participant BC as Blockchain
 
     User ->> Web: 1. Request payment
 
     Web ->> SDK: 2. Build payment payload:<br/> UI details<br/> chain / network<br/> success redirect URL<br/> amount
 
-    SDK ->> GW: 3. Send to HP2 gateway
+    SDK ->> GW: 3. Send to Merchant gateway
     Note right of GW: Validate and persist flow_id
 
-    GW -->> Web: 4.1 Return HashKey Merchant checkout URL
+    GW -->> Web: 4.1 Return Merchant checkout URL
     Web -->> User: 4.2 Redirect to checkout
 
     Note over User: User opens checkout,<br/> picks method, signs in wallet
@@ -98,7 +98,7 @@ sequenceDiagram
 
     GW ->> Web: 7. Webhook with outcome
 
-   
+
 ```
 
 1. **Create order** — `POST /api/v1/merchant/orders` to create a Cart Mandate; receive `payment_url` and `flow_id`
@@ -112,19 +112,19 @@ sequenceDiagram
 
 ## Core ID model
 
-| ID | Alias | Producer | Meaning |
-|----|-------|----------|---------|
-| `cart_mandate_id` | ID1 | Merchant | Order or device identifier—one mandate per order/device authorization |
-| `payment_request_id` | ID2 | Merchant | Payment request id; for one-time orders, pairs 1:1 with `cart_mandate_id` |
-| `flow_id` | ID3 | Gateway | Checkout flow id; used in `payment_url` and status queries |
-| `payment_mandate_id` | ID4 = ID2 | Frontend | Same as `payment_request_id`; links mandate back to the cart |
-| `request_id` | ID5 | Frontend | Unique line-item id generated on the client |
+| ID                   | Alias     | Producer | Meaning                                                                   |
+| -------------------- | --------- | -------- | ------------------------------------------------------------------------- |
+| `cart_mandate_id`    | ID1       | Merchant | Order or device identifier—one mandate per order/device authorization     |
+| `payment_request_id` | ID2       | Merchant | Payment request id; for one-time orders, pairs 1:1 with `cart_mandate_id` |
+| `flow_id`            | ID3       | Gateway  | Checkout flow id; used in `payment_url` and status queries                |
+| `payment_mandate_id` | ID4 = ID2 | Frontend | Same as `payment_request_id`; links mandate back to the cart              |
+| `request_id`         | ID5       | Frontend | Unique line-item id generated on the client                               |
 
 ---
 
 ## Cart Mandate & Payment Mandate
 
-**Cart Mandate** and **Payment Mandate** in HashKey Merchant align with the *Verifiable Digital Credentials (VDCs)* model in the **Agent Payments Protocol (AP2)**: standardized, cryptographically bound objects that express merchant and user authorization and the scope of a transaction. See the full definitions, actors, and journeys in the official spec: [AP2 specification](https://ap2-protocol.org/specification/).
+**Cart Mandate** and **Payment Mandate** in HashKey Merchant align with the _Verifiable Digital Credentials (VDCs)_ model in the **Agent Payments Protocol (AP2)**: standardized, cryptographically bound objects that express merchant and user authorization and the scope of a transaction. See the full definitions, actors, and journeys in the official spec: [AP2 specification](https://ap2-protocol.org/specification/).
 
 In **HashKey Merchant**, the terms mean the following:
 
@@ -143,6 +143,5 @@ For fields and flows specific to this product, see [Building a Cart Mandate](car
 - **[API reference](api-reference.md)** — All Merchant endpoints
 - **[Cart Mandate](cart-mandate.md)** — Schema, Canonical JSON, signing
 - **[Webhooks](webhook.md)** — Payloads, signature verification, retries
-- **[Go SDK](sdk.md)** — Install, config, examples
 - **[Appendix](appendix.md)** — Error codes, networks, changelog
 - **AP2 spec (external)** — [ap2-protocol.org/specification](https://ap2-protocol.org/specification/)

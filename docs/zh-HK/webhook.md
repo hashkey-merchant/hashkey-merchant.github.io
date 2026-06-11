@@ -1,6 +1,6 @@
 # Webhook 支付結果通知
 
-支付進入特定狀態（`payment-successful`／`payment-included`／`payment-failed`）後，網關會主動向商戶設定的 `webhook_url` 發送 HTTP POST 回呼，商戶毋須輪詢即可即時得知支付結果。
+支付進入特定狀態（`payment-included`／`payment-safe`／`payment-finalized`／`payment-failed`）後，網關會主動向商戶設定的 `webhook_url` 發送 HTTP POST 回呼，商戶毋須輪詢即可即時得知支付結果。
 
 ---
 
@@ -117,7 +117,7 @@ func verifyWebhookSignature(r *http.Request, rawBody []byte, appSecret string) e
 | `token_address` | string | 代幣合約地址 | `0x1c7D...` |
 | `chain` | string | 鏈識別（CAIP-2 格式） | `eip155:11155111` |
 | `network` | string | 所屬網絡 | `sepolia` |
-| `status` | string | 支付狀態 | `payment-successful`／`payment-failed`/`payment-included` |
+| `status` | string | 支付狀態 | `payment-included`／`payment-safe`／`payment-finalized`／`payment-failed` |
 | `created_at` | string | 建立時間（RFC 3339） | `2024-03-01T10:00:00Z` |
 
 ### 成功附加欄位
@@ -137,7 +137,7 @@ func verifyWebhookSignature(r *http.Request, rawBody []byte, appSecret string) e
 
 ## 回呼範例
 
-### 支付成功
+### 支付最終確認（`payment-finalized`）
 
 ```json
 {
@@ -151,7 +151,7 @@ func verifyWebhookSignature(r *http.Request, rawBody []byte, appSecret string) e
   "token_address": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
   "chain": "eip155:11155111",
   "network": "sepolia",
-  "status": "payment-successful",
+  "status": "payment-finalized",
   "created_at": "2024-03-01T10:00:00Z",
   "tx_signature": "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab",
   "completed_at": "2024-03-01T10:01:30Z"

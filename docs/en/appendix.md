@@ -6,7 +6,7 @@
 
 - HMAC body hashes
 - `cart_hash`
-- Avoiding ordering drift between SDKs
+- Avoiding ordering drift between client implementations
 
 ### Rules
 

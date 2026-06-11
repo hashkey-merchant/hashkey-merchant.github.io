@@ -36,6 +36,8 @@ openssl ec -in merchant_private_key.pem -pubout -out merchant_public_key.pem
 | `email` | 是 | 管理員電郵 | `admin@acme.com` |
 | `description` | 否 | 機構描述 | `Acme 支付業務團隊` |
 | `default_language` | 是 | 預設語言 | `zh-HK` / `en` |
+| `service_type` | 是 | 服務費方式 | `free` / `price_include` / `price_extra` |
+| `service_rate` | 是 | 服務費率（保留 4 位小數） | `0.0000` |
 | `public_key` | 是 | 商戶公鑰（PEM 格式） | `-----BEGIN PUBLIC KEY-----...` |
 | `supported_chain_tokens` | 是 | 支援的鏈／幣種清單（至少 1 項） | 見下方 |
 
@@ -56,7 +58,7 @@ openssl ec -in merchant_private_key.pem -pubout -out merchant_public_key.pem
 | sepolia | 11155111 | USDC | `0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238` | 6 | 是 | EIP-3009 |
 | sepolia | 11155111 | USDT | `0xff5588b3b38dff1b4b49bfdcbf985e84d8751a0e` | 6 | 是 | Permit2 |
 | sepolia | 11155111 | HSK | `0x31bdac8e4b897e470b70ebe286f94245baa793c2` | 18 | 否 | Permit2 |
-| hashkey-testnet | 133 | USDC | `0x79AEc4EeA31D50792F61D1Ca0733C18c89524C9e` | 6 | 是 | EIP-3009 |
+| hashkey-testnet | 133 | USDC | `0x8FE3cB719Ee4410E236Cd6b72ab1fCDC06eF53c6` | 6 | 是 | EIP-3009 |
 | hashkey-testnet | 133 | USDT | `0x372325443233fEbaC1F6998aC750276468c83CC6` | 6 | 是 | Permit2 |
 
 

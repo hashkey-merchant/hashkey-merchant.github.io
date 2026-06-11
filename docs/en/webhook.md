@@ -1,6 +1,6 @@
 # Webhook payment notifications
 
-When a payment reaches `payment-successful`, `payment-included`, or `payment-failed`, the gateway POSTs to your configured `webhook_url` so you do not need to poll.
+When a payment reaches `payment-included`, `payment-safe`, `payment-finalized`, or `payment-failed`, the gateway POSTs to your configured `webhook_url` so you do not need to poll.
 
 ---
 
@@ -110,7 +110,7 @@ func verifyWebhookSignature(r *http.Request, rawBody []byte, appSecret string) e
 | `token_address` | string | Contract |
 | `chain` | string | CAIP-2 |
 | `network` | string | Network name |
-| `status` | string | `payment-successful` / `payment-failed` / `payment-included` |
+| `status` | string | `payment-included` / `payment-safe` / `payment-finalized` / `payment-failed` |
 | `created_at` | string | RFC 3339 |
 
 ### Success extras
@@ -130,7 +130,7 @@ func verifyWebhookSignature(r *http.Request, rawBody []byte, appSecret string) e
 
 ## Samples
 
-### Success
+### Finalized (`payment-finalized`)
 
 ```json
 {
@@ -144,7 +144,7 @@ func verifyWebhookSignature(r *http.Request, rawBody []byte, appSecret string) e
   "token_address": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
   "chain": "eip155:11155111",
   "network": "sepolia",
-  "status": "payment-successful",
+  "status": "payment-finalized",
   "created_at": "2024-03-01T10:00:00Z",
   "tx_signature": "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab",
   "completed_at": "2024-03-01T10:01:30Z"

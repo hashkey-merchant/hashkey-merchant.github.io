@@ -1,4 +1,4 @@
-# API 接口
+# API 文件
 
 Merchant API 基礎路徑：`https://{host}/api/v1`
 
@@ -196,7 +196,7 @@ GET /api/v1/merchant/payments?flow_id=b660fdc3-ac04-437f-921f-efbfb8d089f7
       "chain": "eip155:11155111",
       "network": "sepolia",
       "extra_protocol": "eip3009",
-      "status": "payment-successful",
+      "status": "payment-finalized",
       "payer_address": "0x1234...",
       "to_pay_address": "0x99c1...",
       "risk_level": "Low",
@@ -267,7 +267,7 @@ GET /api/v1/merchant/payments/reusable?request_id=req_20240301_abc123
         "token": "USDC",
         "chain": "eip155:11155111",
         "network": "sepolia",
-        "status": "payment-successful",
+        "status": "payment-finalized",
         "payer_address": "0x1234...",
         "to_pay_address": "0x99c1...",
         "tx_signature": "0xabcd...",
@@ -313,7 +313,7 @@ GET /api/v1/merchant/payments/reusable?request_id=req_20240301_abc123
 | `payer_address` | string | 付款人錢包地址 |
 | `to_pay_address` | string | 收款地址 |
 | `risk_level` | string | AML 風險等級 |
-| `tx_signature` | string | 鏈上交易雜湊（成功時返回） |
+| `tx_signature` | string | 鏈上交易雜湊（交易打包後返回） |
 | `broadcast_at` | string? | 首次廣播時間（RFC 3339） |
 | `gas_limit` | int | Gas 限制 |
 | `gas_fee` | string | Gas 費用 |
@@ -323,7 +323,7 @@ GET /api/v1/merchant/payments/reusable?request_id=req_20240301_abc123
 | `deadline_time` | string | 支付截止時間（RFC 3339） |
 | `created_at` | string | 建立時間（RFC 3339） |
 | `updated_at` | string | 更新時間（RFC 3339） |
-| `completed_at` | string? | 完成時間（RFC 3339，成功時返回） |
+| `completed_at` | string? | 完成時間（RFC 3339，`payment-finalized` 時返回） |
 
 ---
 
