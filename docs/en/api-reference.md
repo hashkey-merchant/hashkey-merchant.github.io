@@ -6,11 +6,11 @@ All `/merchant/*` routes require [HMAC authentication](authentication.md).
 
 ## Base URLs
 
-QA (testnet + mainnet tokens): `https://merchant-qa.hashkeymerchant.com`
+QA (testnet): `https://merchant-qa.hashkeymerchant.com`
 
 Staging (mainnet tokens only): `https://merchant-stg.hashkeymerchant.com`
 
-Production (mainnet tokens only): `https://merchant.hashkey.com`
+Production (mainnet tokens only): `https://hsp.hashkey.com`
 
 ## Overview
 
@@ -59,7 +59,21 @@ Production (mainnet tokens only): `https://merchant.hashkey.com`
             {"label": "Item A", "amount": {"currency": "USD", "value": "10.00"}},
             {"label": "Item B", "amount": {"currency": "USD", "value": "5.00"}}
           ],
-          "total": {"label": "Total", "amount": {"currency": "USD", "value": "15.00"}}
+          "total": {"label": "Total", "amount": {"currency": "USD", "value": "15.00"}},
+          "modifiers": [
+            {
+              "total": {"currency": "USD", "value": "16.00"},
+              "additional_display_items": [
+                {
+                  "label": "Service fee",
+                  "amount": {"currency": "USD", "value": "1.00"},
+                  "pending": true,
+                  "refund_period": 0
+                }
+              ],
+              "data": {"method_data_indexes": [0]}
+            }
+          ]
         }
       },
       "cart_expiry": "2024-03-01T12:00:00Z",
@@ -87,11 +101,22 @@ Production (mainnet tokens only): `https://merchant.hashkey.com`
 | `method_data[].data.coin` | string | Yes | Symbol (e.g. `USDC`) |
 | `details.id` | string | Yes | `payment_request_id` (ID2) |
 | `details.display_items` | array | No | Line items |
-| `details.total` | object | Yes | Total (`label` + `amount`) |
+| `details.total` | object | Yes | Merchandise total (`label` + `amount`); currency must be `USD` |
+| `details.modifiers` | array | No | Additional charges scoped to selected payment methods |
+| `details.modifiers[].total` | object | Yes | Final payment amount (`currency` + `value`); currency must be `USD` |
+| `details.modifiers[].additional_display_items` | array | Yes | Additional charges; Checkout aggregates multiple entries |
+| `details.modifiers[].additional_display_items[].label` | string | Yes | Additional charge description |
+| `details.modifiers[].additional_display_items[].amount` | object | Yes | Additional charge amount; currency must be `USD` |
+| `details.modifiers[].additional_display_items[].pending` | bool | Yes | Must be `true` |
+| `details.modifiers[].additional_display_items[].refund_period` | int | Yes | Not currently supported; set to `0` |
+| `details.modifiers[].data.method_data_indexes` | array of int | Yes | Valid zero-based indexes into `payment_request.method_data` |
 | `contents.cart_expiry` | string | Yes | RFC 3339 expiry (~2h typical) |
 | `contents.merchant_name` | string | Yes | Merchant display name |
 | `merchant_authorization` | string | Yes | ES256K JWT — [Authentication](authentication.md) |
 | `redirect_url` | string | No | Post-payment redirect |
+
+> [!IMPORTANT]
+> For each modifier, `modifier.total.value` must equal `details.total.amount.value` plus the sum of `additional_display_items[].amount.value`. If `display_items` is present, its amount sum must equal `details.total.amount.value`. A modifier applies only to the payment methods referenced by `method_data_indexes`. See [Building a Cart Mandate](cart-mandate.md#modifiers) for details.
 
 ### Success response
 
@@ -169,43 +194,53 @@ GET /api/v1/merchant/payments?payment_request_id=PAY-REQ-20240301-001
 GET /api/v1/merchant/payments?flow_id=b660fdc3-ac04-437f-921f-efbfb8d089f7
 ```
 
-### Sample (`cart_mandate_id`)
+### Sample (`payment_request_id` or `flow_id`)
 
 ```json
 {
   "code": 0,
-  "msg": "success",
-  "data": [
-    {
-      "payment_request_id": "PAY-REQ-20240301-001",
-      "request_id": "req_20240301_abc123",
-      "token_address": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
-      "flow_id": "b660fdc3-ac04-437f-921f-efbfb8d089f7",
-      "app_key": "ak_xxx",
-      "amount": "15000000",
-      "usd_amount": "15.00",
-      "token": "USDC",
-      "chain": "eip155:11155111",
-      "network": "sepolia",
-      "extra_protocol": "eip3009",
-      "status": "payment-finalized",
-      "payer_address": "0x1234...",
-      "to_pay_address": "0x99c1...",
-      "risk_level": "Low",
-      "tx_signature": "0xabcd...",
-      "broadcast_at": "2024-03-01T10:00:15Z",
-      "gas_limit": 150000,
-      "gas_fee": "0.001",
-      "service_fee_rate": "0.0000",
-      "service_fee_type": "free",
-      "deadline_time": "2024-03-01T12:00:00Z",
-      "created_at": "2024-03-01T10:00:00Z",
-      "updated_at": "2024-03-01T10:01:30Z",
-      "completed_at": "2024-03-01T10:01:30Z"
-    }
-  ]
+  "data": {
+    "app_key": "ABCD1234",
+    "base_fee": "0.0010",
+    "broadcast_at": "2026-01-06T15:06:30Z",
+    "chain": "eip155:11155111",
+    "completed_at": "2026-01-06T15:10:30Z",
+    "content_id": "cart_123456",
+    "created_at": "2026-01-06T15:04:05Z",
+    "deadline_time": "2026-01-06T16:04:05Z",
+    "extra_protocol": "eip3009",
+    "flow_id": "FLOW123456",
+    "gas_fee": "0.05",
+    "gas_fee_advanced": true,
+    "gas_fee_amount": "0.000045",
+    "gas_limit": 100000,
+    "included_at": "2026-01-06T15:08:00Z",
+    "network": "sepolia",
+    "network_fee": "0.05",
+    "pay_amount": "100.30",
+    "payer_address": "0x1234567890abcdef",
+    "payment_request_id": "7glTuOSMKPZwmXZV4hbS",
+    "order_amount": "100.00",
+    "product_amount": "99.00",
+    "request_id": "20260106150405123456",
+    "status": "payment-finalized",
+    "status_reason": "验证失败",
+    "to_pay_address": "0xabcdef1234567890",
+    "token": "USDC",
+    "token_address": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+    "tx_signature": "0xabcd1234...",
+    "updated_at": "2026-01-06T15:05:30Z",
+    "usd_additional_amount": "1.00",
+    "usd_amount": "100.25",
+    "usd_amount_rate": "1",
+    "usd_pay_amount": "100.30",
+    "usd_product_amount": "99.25"
+  },
+  "msg": "string"
 }
 ```
+
+Queries by `cart_mandate_id` return an array of the same payment record objects in `data`.
 
 ---
 
@@ -244,22 +279,41 @@ GET /api/v1/merchant/payments/reusable?request_id=req_20240301_abc123
   "data": {
     "list": [
       {
-        "payment_request_id": "pay_req_002",
-        "request_id": "pay_002",
-        "token_address": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
-        "flow_id": "b660fdc3-ac04-437f-921f-efbfb8d089f7",
-        "app_key": "ak_xxx",
-        "amount": "1000000",
-        "usd_amount": "1.00",
-        "token": "USDC",
+        "app_key": "ABCD1234",
+        "base_fee": "0.0010",
+        "broadcast_at": "2026-01-06T15:06:30Z",
         "chain": "eip155:11155111",
+        "completed_at": "2026-01-06T15:10:30Z",
+        "content_id": "cart_123456",
+        "created_at": "2026-01-06T15:04:05Z",
+        "deadline_time": "2026-01-06T16:04:05Z",
+        "extra_protocol": "eip3009",
+        "flow_id": "FLOW123456",
+        "gas_fee": "0.05",
+        "gas_fee_advanced": true,
+        "gas_fee_amount": "0.000045",
+        "gas_limit": 100000,
+        "included_at": "2026-01-06T15:08:00Z",
         "network": "sepolia",
+        "network_fee": "0.05",
+        "pay_amount": "100.30",
+        "payer_address": "0x1234567890abcdef",
+        "payment_request_id": "7glTuOSMKPZwmXZV4hbS",
+        "order_amount": "100.00",
+        "product_amount": "99.00",
+        "request_id": "20260106150405123456",
         "status": "payment-finalized",
-        "payer_address": "0x1234...",
-        "to_pay_address": "0x99c1...",
-        "tx_signature": "0xabcd...",
-        "created_at": "2024-03-01T11:00:00Z",
-        "completed_at": "2024-03-01T11:01:30Z"
+        "status_reason": "验证失败",
+        "to_pay_address": "0xabcdef1234567890",
+        "token": "USDC",
+        "token_address": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+        "tx_signature": "0xabcd1234...",
+        "updated_at": "2026-01-06T15:05:30Z",
+        "usd_additional_amount": "1.00",
+        "usd_amount": "100.25",
+        "usd_amount_rate": "1",
+        "usd_pay_amount": "100.30",
+        "usd_product_amount": "99.25"
       }
     ],
     "total": 15,
@@ -284,33 +338,41 @@ Returned on all payment queries (`PaymentItemResponse`):
 
 | Field | Type | Description |
 |-------|------|-------------|
+| `content_id` | string | `cart_mandate.contents.id` |
 | `payment_request_id` | string | ID2 |
 | `request_id` | string | ID5 |
-| `token_address` | string | Token contract |
 | `flow_id` | string | ID3 |
 | `app_key` | string | Application id |
-| `amount` | string | Amount in smallest units (e.g. USDC 6 decimals) |
-| `usd_amount` | string | USD notionals |
+| `product_amount` | string | Product amount (token-denominated) |
+| `order_amount` | string | Order amount (token-denominated): product amount plus additional charges |
+| `pay_amount` | string | Payment quantity (token-denominated) |
+| `usd_product_amount` | string | Product amount (USD) |
+| `usd_additional_amount` | string | Additional charges (USD) |
+| `usd_amount` | string | Amount (USD) |
+| `usd_amount_rate` | string | Exchange rate between USD and the token |
+| `usd_pay_amount` | string | Final payment amount (USD) |
 | `token` | string | Symbol |
-| `chain` | string | CAIP-2 (e.g. `eip155:11155111`) |
-| `network` | string | Network name |
-| `extra_protocol` | string | `eip3009` / `permit2` |
-| `status` | string | See [state machine](cart-mandate.md#payment-state-machine) |
-| `status_reason` | string? | Failure reason |
+| `token_address` | string | Token contract |
 | `payer_address` | string | Payer |
 | `to_pay_address` | string | Payee |
-| `risk_level` | string | AML risk |
-| `tx_signature` | string | Tx hash once included on chain |
-| `broadcast_at` | string? | First broadcast time |
-| `gas_limit` | int | Gas limit |
+| `chain` | string | CAIP-2 (e.g. `eip155:11155111`) |
+| `network` | string | Network name |
+| `extra_protocol` | string | On-chain payment protocol (`eip3009` / `permit2`) |
+| `base_fee` | string | Base fee |
+| `network_fee` | string | Network fee |
 | `gas_fee` | string | Gas fee |
 | `gas_fee_amount` | string | Gas fee amount |
-| `service_fee_rate` | string | Service fee rate |
-| `service_fee_type` | string | `free` / `price_include` / `price_extra` |
+| `gas_fee_advanced` | bool | Whether the merchant advances the gas fee |
+| `gas_limit` | int | Gas limit |
+| `status` | string | See [state machine](cart-mandate.md#payment-state-machine) |
+| `status_reason` | string? | Status reason |
+| `tx_signature` | string | Tx hash once included on chain |
 | `deadline_time` | string | Payment deadline |
-| `created_at` | string | Created |
+| `created_at` | string | Created time |
 | `updated_at` | string | Updated |
-| `completed_at` | string? | Set when status is `payment-finalized` |
+| `broadcast_at` | string? | First broadcast time |
+| `included_at` | string? | Time the transaction was included in a block |
+| `completed_at` | string? | Completion time |
 
 ---
 

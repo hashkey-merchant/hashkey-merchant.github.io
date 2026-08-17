@@ -92,6 +92,11 @@ Canonical output:
 
 ## Changelog
 
+### v2.1.0 — 2026-08-12
+
+- Added `details.modifiers` for payment-method-specific additional charges, including amount validation and `method_data_indexes` matching
+- Updated payment query responses with product, order, payment, USD conversion, fee, gas sponsorship, and transaction lifecycle fields
+
 ### v1.1.0 — 2026-03-25
 
 - Initial release: one-time & reusable orders + payment queries

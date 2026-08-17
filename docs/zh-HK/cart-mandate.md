@@ -10,27 +10,36 @@ Cart Mandate 是核心支付請求資料結構，包含訂單資訊、支付方�
 {
   "cart_mandate": {
     "contents": {
-      "id": "ORDER-001", // cart_mandate_id (ID1)
+      "id": "ORDER-001",
       "user_cart_confirmation_required": true,
       "payment_request": {
         "method_data": [
           {
-            // 支付方式清單
             "supported_methods": "https://www.x402.org/",
             "data": {
               "x402Version": 2,
               "network": "sepolia",
               "chain_id": 11155111,
               "contract_address": "0x1c7D...",
-              "pay_to": "0x99c1...", // 收款地址
+              "pay_to": "0x99c1...",
               "coin": "USDC"
+            }
+          },
+          {
+            "supported_methods": "https://www.x402.org/",
+            "data": {
+              "x402Version": 2,
+              "network": "sepolia",
+              "chain_id": 11155111,
+              "contract_address": "0x3f3F...",
+              "pay_to": "0x99c1...",
+              "coin": "USDT"
             }
           }
         ],
         "details": {
-          "id": "PAY-REQ-001", // payment_request_id (ID2)
+          "id": "PAY-REQ-001",
           "display_items": [
-            // 商品明細
             {
               "label": "商品 A",
               "amount": { "currency": "USD", "value": "10.00" }
@@ -41,18 +50,33 @@ Cart Mandate 是核心支付請求資料結構，包含訂單資訊、支付方�
             }
           ],
           "total": {
-            // 總金額
             "label": "總計",
             "amount": { "currency": "USD", "value": "15.00" }
-          }
+          },
+          "modifiers": [
+            {
+              "total": { "currency": "USD", "value": "16.00" },
+              "additional_display_items": [
+                {
+                  "label": "服務費",
+                  "amount": { "currency": "USD", "value": "1.00" },
+                  "pending": true,
+                  "refund_period": 0
+                }
+              ],
+              "data": {
+                "method_data_indexes": [0, 1]
+              }
+            }
+          ]
         }
       },
-      "cart_expiry": "2024-03-01T12:00:00Z", // RFC 3339 過期時間
+      "cart_expiry": "2024-03-01T12:00:00Z",
       "merchant_name": "My Store"
     },
-    "merchant_authorization": "eyJhbG..." // ES256K JWT
+    "merchant_authorization": "eyJhbG..."
   },
-  "redirect_url": "https://yoursite.com/redirect" // 選填
+  "redirect_url": "https://yoursite.com/redirect"
 }
 ```
 
@@ -82,7 +106,7 @@ Cart Mandate 是核心支付請求資料結構，包含訂單資訊、支付方�
 | `data.chain_id`         | int    | 是   | 鏈 ID（如 `11155111`）               |
 | `data.contract_address` | string | 是   | 代幣合約地址                         |
 | `data.pay_to`           | string | 是   | 收款地址                             |
-| `data.coin`             | string | 是   | 代幣符號（如 `USDC`、`USDT`）        |
+| `data.coin`             | string | 是   | 代幣（如 `USDC`、`USDT`）        |
 
 > [!TIP]
 > 可設定多個 `method_data` 項以支援多鏈／多幣種支付，用戶於支付頁面選擇。
@@ -93,9 +117,41 @@ Cart Mandate 是核心支付請求資料結構，包含訂單資訊、支付方�
 | ------------------ | ------ | ---- | -------------------------------------------------------- |
 | `id`               | string | 是   | 支付請求 ID（`payment_request_id`，ID2）                 |
 | `display_items`    | array  | 否   | 商品明細清單，每項包含 `label` 與 `amount`               |
-| `total`            | object | 是   | 總金額，包含 `label` 與 `amount`（`currency` + `value`） |
+| `total`            | object | 是   | 商品總金額，包含 `label` 與 `amount`（`currency` + `value`） |
 | `shipping_options` | array  | 否   | 配送選項                                                 |
 | `modifiers`        | array  | 否   | 支付修改器                                               |
+
+### modifiers（支付修改器）
+
+支付修改器可為指定支付方式在商品金額上加入額外費用。每個修改器包含以下欄位：
+
+| 欄位 | 類型 | 必填 | 說明 |
+| ---- | ---- | ---- | ---- |
+| `modifiers[].total` | object | 是 | 加入額外費用後的最終支付金額（`currency` + `value`） |
+| `modifiers[].additional_display_items` | array | 是 | 額外費用清單；可傳入多項，Checkout 頁面會匯總顯示 |
+| `modifiers[].additional_display_items[].label` | string | 是 | 額外費用說明 |
+| `modifiers[].additional_display_items[].amount` | object | 是 | 額外費用金額（`currency` + `value`） |
+| `modifiers[].additional_display_items[].pending` | bool | 是 | 固定為 `true` |
+| `modifiers[].additional_display_items[].refund_period` | int | 是 | 暫不支援；請設為 `0` |
+| `modifiers[].data` | object | 是 | 支付方式匹配資料 |
+| `modifiers[].data.method_data_indexes` | int array | 是 | `payment_request.method_data` 的零起始索引 |
+
+`details.total`、`display_items`、修改器 `total` 及 `additional_display_items` 的幣種均固定為 `USD`。
+
+#### 金額校驗
+
+支付網關會按以下規則校驗金額：
+
+1. 每個修改器須符合 `modifier.total.value = details.total.amount.value + sum(modifier.additional_display_items[].amount.value)`。
+2. 如有傳入 `display_items`，須符合 `sum(details.display_items[].amount.value) = details.total.amount.value`。
+
+在完整示例中，商品金額為 `15.00`、額外費用為 `1.00`，最終支付金額為 `16.00`。
+
+#### 支付方式匹配
+
+`data.method_data_indexes` 指定外層 `payment_request.method_data` 陣列中可使用此修改器的支付方式。每個值必須是該陣列內有效的零起始索引；只有用戶選擇的支付方式匹配其中一個索引時，才會套用此修改器。
+
+例如，`[0, 1]` 會匹配完整示例中的兩種支付方式。當 `method_data` 只有兩項時，索引 `-1` 和 `2` 均無效。
 
 ### cart_expiry 有效期建議
 

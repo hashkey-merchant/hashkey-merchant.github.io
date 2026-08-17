@@ -6,11 +6,11 @@ Merchant API 基礎路徑：`https://{host}/api/v1`
 
 ## API 伺服器地址
 
-測試（支援測試網／主網 token）：`https://merchant-qa.hashkeymerchant.com`
+測試（支援測試網）：`https://merchant-qa.hashkeymerchant.com`
 
 Staging 環境（僅支援主網 token）：`https://merchant-stg.hashkeymerchant.com`
 
-生產環境（僅支援主網 token）：`https://merchant.hashkey.com`
+生產環境（僅支援主網 token）：`https://hsp.hashkey.com`
 
 
 ## API 總覽
@@ -60,7 +60,21 @@ Staging 環境（僅支援主網 token）：`https://merchant-stg.hashkeymerchan
             {"label": "商品 A", "amount": {"currency": "USD", "value": "10.00"}},
             {"label": "商品 B", "amount": {"currency": "USD", "value": "5.00"}}
           ],
-          "total": {"label": "總計", "amount": {"currency": "USD", "value": "15.00"}}
+          "total": {"label": "總計", "amount": {"currency": "USD", "value": "15.00"}},
+          "modifiers": [
+            {
+              "total": {"currency": "USD", "value": "16.00"},
+              "additional_display_items": [
+                {
+                  "label": "服務費",
+                  "amount": {"currency": "USD", "value": "1.00"},
+                  "pending": true,
+                  "refund_period": 0
+                }
+              ],
+              "data": {"method_data_indexes": [0]}
+            }
+          ]
         }
       },
       "cart_expiry": "2024-03-01T12:00:00Z",
@@ -85,14 +99,25 @@ Staging 環境（僅支援主網 token）：`https://merchant-stg.hashkeymerchan
 | `method_data[].data.chain_id` | int | 是 | 鏈 ID（如 `11155111`） |
 | `method_data[].data.contract_address` | string | 是 | 代幣合約地址 |
 | `method_data[].data.pay_to` | string | 是 | 收款地址 |
-| `method_data[].data.coin` | string | 是 | 代幣符號（如 `USDC`） |
+| `method_data[].data.coin` | string | 是 | 代幣（如 `USDC`） |
 | `details.id` | string | 是 | 支付請求 ID（`payment_request_id`，ID2） |
 | `details.display_items` | array | 否 | 商品明細清單 |
-| `details.total` | object | 是 | 總金額（`label` + `amount`） |
+| `details.total` | object | 是 | 商品總金額（`label` + `amount`）；幣種固定為 `USD` |
+| `details.modifiers` | array | 否 | 按所選支付方式套用的額外費用 |
+| `details.modifiers[].total` | object | 是 | 最終支付金額（`currency` + `value`）；幣種固定為 `USD` |
+| `details.modifiers[].additional_display_items` | array | 是 | 額外費用清單；Checkout 會匯總顯示多個項目 |
+| `details.modifiers[].additional_display_items[].label` | string | 是 | 額外費用說明 |
+| `details.modifiers[].additional_display_items[].amount` | object | 是 | 額外費用金額；幣種固定為 `USD` |
+| `details.modifiers[].additional_display_items[].pending` | bool | 是 | 固定為 `true` |
+| `details.modifiers[].additional_display_items[].refund_period` | int | 是 | 暫不支援；請設為 `0` |
+| `details.modifiers[].data.method_data_indexes` | int array | 是 | `payment_request.method_data` 的有效零起始索引 |
 | `contents.cart_expiry` | string | 是 | 授權過期時間（RFC 3339 格式），建議 2 小時 |
 | `contents.merchant_name` | string | 是 | 商戶名稱 |
 | `merchant_authorization` | string | 是 | 商戶 JWT 簽章（ES256K），詳見 [認證與簽章](authentication.md) |
 | `redirect_url` | string | 否 | 支付完成後跳轉 URL |
+
+> [!IMPORTANT]
+> 每個修改器的 `modifier.total.value` 必須等於 `details.total.amount.value` 加上 `additional_display_items[].amount.value` 的總和。如有傳入 `display_items`，其金額總和必須等於 `details.total.amount.value`。修改器只會套用於 `method_data_indexes` 指定的支付方式。詳情請參閱 [Cart Mandate 組裝](cart-mandate.md#modifiers支付修改器)。
 
 ### 成功回應
 
@@ -177,43 +202,53 @@ GET /api/v1/merchant/payments?payment_request_id=PAY-REQ-20240301-001
 GET /api/v1/merchant/payments?flow_id=b660fdc3-ac04-437f-921f-efbfb8d089f7
 ```
 
-### 回應範例（按 cart_mandate_id）
+### 回應範例（按 payment_request_id 或 flow_id）
 
 ```json
 {
   "code": 0,
-  "msg": "success",
-  "data": [
-    {
-      "payment_request_id": "PAY-REQ-20240301-001",
-      "request_id": "req_20240301_abc123",
-      "token_address": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
-      "flow_id": "b660fdc3-ac04-437f-921f-efbfb8d089f7",
-      "app_key": "ak_xxx",
-      "amount": "15000000",
-      "usd_amount": "15.00",
-      "token": "USDC",
-      "chain": "eip155:11155111",
-      "network": "sepolia",
-      "extra_protocol": "eip3009",
-      "status": "payment-finalized",
-      "payer_address": "0x1234...",
-      "to_pay_address": "0x99c1...",
-      "risk_level": "Low",
-      "tx_signature": "0xabcd...",
-      "broadcast_at": "2024-03-01T10:00:15Z",
-      "gas_limit": 150000,
-      "gas_fee": "0.001",
-      "service_fee_rate": "0.0000",
-      "service_fee_type": "free",
-      "deadline_time": "2024-03-01T12:00:00Z",
-      "created_at": "2024-03-01T10:00:00Z",
-      "updated_at": "2024-03-01T10:01:30Z",
-      "completed_at": "2024-03-01T10:01:30Z"
-    }
-  ]
+  "data": {
+    "app_key": "ABCD1234",
+    "base_fee": "0.0010",
+    "broadcast_at": "2026-01-06T15:06:30Z",
+    "chain": "eip155:11155111",
+    "completed_at": "2026-01-06T15:10:30Z",
+    "content_id": "cart_123456",
+    "created_at": "2026-01-06T15:04:05Z",
+    "deadline_time": "2026-01-06T16:04:05Z",
+    "extra_protocol": "eip3009",
+    "flow_id": "FLOW123456",
+    "gas_fee": "0.05",
+    "gas_fee_advanced": true,
+    "gas_fee_amount": "0.000045",
+    "gas_limit": 100000,
+    "included_at": "2026-01-06T15:08:00Z",
+    "network": "sepolia",
+    "network_fee": "0.05",
+    "pay_amount": "100.30",
+    "payer_address": "0x1234567890abcdef",
+    "payment_request_id": "7glTuOSMKPZwmXZV4hbS",
+    "order_amount": "100.00",
+    "product_amount": "99.00",
+    "request_id": "20260106150405123456",
+    "status": "payment-finalized",
+    "status_reason": "验证失败",
+    "to_pay_address": "0xabcdef1234567890",
+    "token": "USDC",
+    "token_address": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+    "tx_signature": "0xabcd1234...",
+    "updated_at": "2026-01-06T15:05:30Z",
+    "usd_additional_amount": "1.00",
+    "usd_amount": "100.25",
+    "usd_amount_rate": "1",
+    "usd_pay_amount": "100.30",
+    "usd_product_amount": "99.25"
+  },
+  "msg": "string"
 }
 ```
+
+按 `cart_mandate_id` 查詢時，`data` 會返回由相同支付記錄物件組成的陣列。
 
 ---
 
@@ -257,22 +292,41 @@ GET /api/v1/merchant/payments/reusable?request_id=req_20240301_abc123
   "data": {
     "list": [
       {
-        "payment_request_id": "pay_req_002",
-        "request_id": "pay_002",
-        "token_address": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
-        "flow_id": "b660fdc3-ac04-437f-921f-efbfb8d089f7",
-        "app_key": "ak_xxx",
-        "amount": "1000000",
-        "usd_amount": "1.00",
-        "token": "USDC",
+        "app_key": "ABCD1234",
+        "base_fee": "0.0010",
+        "broadcast_at": "2026-01-06T15:06:30Z",
         "chain": "eip155:11155111",
+        "completed_at": "2026-01-06T15:10:30Z",
+        "content_id": "cart_123456",
+        "created_at": "2026-01-06T15:04:05Z",
+        "deadline_time": "2026-01-06T16:04:05Z",
+        "extra_protocol": "eip3009",
+        "flow_id": "FLOW123456",
+        "gas_fee": "0.05",
+        "gas_fee_advanced": true,
+        "gas_fee_amount": "0.000045",
+        "gas_limit": 100000,
+        "included_at": "2026-01-06T15:08:00Z",
         "network": "sepolia",
+        "network_fee": "0.05",
+        "pay_amount": "100.30",
+        "payer_address": "0x1234567890abcdef",
+        "payment_request_id": "7glTuOSMKPZwmXZV4hbS",
+        "order_amount": "100.00",
+        "product_amount": "99.00",
+        "request_id": "20260106150405123456",
         "status": "payment-finalized",
-        "payer_address": "0x1234...",
-        "to_pay_address": "0x99c1...",
-        "tx_signature": "0xabcd...",
-        "created_at": "2024-03-01T11:00:00Z",
-        "completed_at": "2024-03-01T11:01:30Z"
+        "status_reason": "验证失败",
+        "to_pay_address": "0xabcdef1234567890",
+        "token": "USDC",
+        "token_address": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+        "tx_signature": "0xabcd1234...",
+        "updated_at": "2026-01-06T15:05:30Z",
+        "usd_additional_amount": "1.00",
+        "usd_amount": "100.25",
+        "usd_amount_rate": "1",
+        "usd_pay_amount": "100.30",
+        "usd_product_amount": "99.25"
       }
     ],
     "total": 15,
@@ -297,33 +351,41 @@ GET /api/v1/merchant/payments/reusable?request_id=req_20240301_abc123
 
 | 欄位 | 類型 | 說明 |
 |------|------|------|
+| `content_id` | string | `cart_mandate.contents.id` |
 | `payment_request_id` | string | 支付請求 ID（ID2） |
 | `request_id` | string | 支付記錄唯一識別（ID5） |
-| `token_address` | string | 代幣合約地址 |
 | `flow_id` | string | 支付流程 ID（ID3） |
 | `app_key` | string | 應用程式識別 |
-| `amount` | string | 支付金額（最小單位，如 USDC 為 6 位精度，`"15000000"` = 15 USDC） |
-| `usd_amount` | string | 支付對應的 USD 金額 |
-| `token` | string | 代幣符號 |
-| `chain` | string | 鏈識別（CAIP-2 格式，如 `eip155:11155111`） |
-| `network` | string | 區塊鏈網絡名稱 |
-| `extra_protocol` | string | x402 協議類型（`eip3009` / `permit2`） |
-| `status` | string | 支付狀態（見[支付狀態機](cart-mandate.md#支付狀態機)） |
-| `status_reason` | string? | 狀態原因（失敗時返回） |
+| `product_amount` | string | 商品金額（幣本位） |
+| `order_amount` | string | 訂單金額（幣本位），即商品金額加額外費用 |
+| `pay_amount` | string | 支付數量（幣本位） |
+| `usd_product_amount` | string | 商品金額（USD） |
+| `usd_additional_amount` | string | 額外費用（USD） |
+| `usd_amount` | string | 金額（USD） |
+| `usd_amount_rate` | string | USD 與幣種的匯率 |
+| `usd_pay_amount` | string | 最終支付金額（USD） |
+| `token` | string | 代幣 |
+| `token_address` | string | 代幣合約地址 |
 | `payer_address` | string | 付款人錢包地址 |
 | `to_pay_address` | string | 收款地址 |
-| `risk_level` | string | AML 風險等級 |
-| `tx_signature` | string | 鏈上交易雜湊（交易打包後返回） |
-| `broadcast_at` | string? | 首次廣播時間（RFC 3339） |
-| `gas_limit` | int | Gas 限制 |
+| `chain` | string | 鏈識別（CAIP-2 格式，如 `eip155:11155111`） |
+| `network` | string | 區塊鏈網絡名稱 |
+| `extra_protocol` | string | 鏈上支付協議（`eip3009` / `permit2`） |
+| `base_fee` | string | 基礎費用 |
+| `network_fee` | string | 網絡費用 |
 | `gas_fee` | string | Gas 費用 |
 | `gas_fee_amount` | string | Gas 費用金額 |
-| `service_fee_rate` | string | 服務費率 |
-| `service_fee_type` | string | 手續費類型（`free` / `price_include` / `price_extra`） |
+| `gas_fee_advanced` | bool | 是否由商戶墊付 Gas 費用 |
+| `gas_limit` | int | Gas 上限 |
+| `status` | string | 支付狀態（見[支付狀態機](cart-mandate.md#支付狀態機)） |
+| `status_reason` | string? | 狀態原因 |
+| `tx_signature` | string | 鏈上交易Hash（交易打包後返回） |
 | `deadline_time` | string | 支付截止時間（RFC 3339） |
 | `created_at` | string | 建立時間（RFC 3339） |
 | `updated_at` | string | 更新時間（RFC 3339） |
-| `completed_at` | string? | 完成時間（RFC 3339，`payment-finalized` 時返回） |
+| `broadcast_at` | string? | 首次廣播時間（RFC 3339） |
+| `included_at` | string? | 交易被打包進區塊的時間（RFC 3339） |
+| `completed_at` | string? | 完成時間（RFC 3339） |
 
 ---
 

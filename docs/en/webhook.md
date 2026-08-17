@@ -8,7 +8,7 @@ When a payment reaches `payment-included`, `payment-safe`, `payment-finalized`, 
 
 `webhook_url` is stored per application (AppCredential) in the merchant console:
 
-1. Sign in → **Applications**
+1. Sign in → **My Account**
 2. Edit the app
 3. Set **Payment webhook URL** (`webhook_url`) — **HTTPS only**
 
@@ -96,6 +96,8 @@ func verifyWebhookSignature(r *http.Request, rawBody []byte, appSecret string) e
 
 ## Payload fields
 
+Amount and fee fields are token-denominated decimal strings (not integer smallest units). Meanings match [payment record fields](api-reference.md#payment-record-fields).
+
 ### Common
 
 | Field | Type | Description |
@@ -105,26 +107,35 @@ func verifyWebhookSignature(r *http.Request, rawBody []byte, appSecret string) e
 | `request_id` | string | ID5 |
 | `cart_mandate_id` | string | ID1 |
 | `payer_address` | string | Payer wallet |
-| `amount` | string | Smallest units |
+| `to_pay_address` | string | Payee |
+| `amount` | string | Payment amount (token-denominated); same as `pay_amount` |
+| `order_amount` | string | Order amount (token-denominated): product amount plus additional charges |
+| `product_amount` | string | Product amount (token-denominated) |
+| `pay_amount` | string | Payment quantity (token-denominated) |
+| `usd_amount` | string | Amount (USD) |
+| `gas_fee` | string | Gas fee |
+| `gas_fee_amount` | string | Gas fee amount |
+| `gas_fee_advanced` | bool | Whether the merchant advances the gas fee |
+| `network_fee` | string | Network fee |
+| `service_fee` | string | Service fee |
+| `base_fee` | string | Base fee |
 | `token` | string | Symbol |
 | `token_address` | string | Contract |
 | `chain` | string | CAIP-2 |
 | `network` | string | Network name |
 | `status` | string | `payment-included` / `payment-safe` / `payment-finalized` / `payment-failed` |
 | `created_at` | string | RFC 3339 |
+| `status_reason` | string | Status reason: confirmation detail on success, failure cause on `payment-failed` |
 
 ### Success extras
 
-| Field | Type |
-|-------|------|
-| `tx_signature` | string |
-| `completed_at` | string |
+Present once the transaction is on chain (`payment-included` / `payment-safe` / `payment-finalized`):
 
-### Failure extras
-
-| Field | Type |
-|-------|------|
-| `status_reason` | string |
+| Field | Type | Description |
+|-------|------|-------------|
+| `tx_signature` | string | On-chain transaction hash |
+| `included_at` | string | Time the transaction was included in a block (RFC 3339) |
+| `completed_at` | string | Completion time (RFC 3339); returned at `payment-finalized` |
 
 ---
 
@@ -139,35 +150,59 @@ func verifyWebhookSignature(r *http.Request, rawBody []byte, appSecret string) e
   "request_id": "req_20240301_abc123",
   "cart_mandate_id": "ORDER-20240301-001",
   "payer_address": "0x1234567890abcdef1234567890abcdef12345678",
-  "amount": "15000000",
+  "to_pay_address": "0xabcdef1234567890abcdef1234567890abcdef12",
+  "amount": "100.30",
+  "order_amount": "100.00",
+  "product_amount": "99.00",
+  "pay_amount": "100.30",
+  "usd_amount": "100.25",
+  "gas_fee": "0.05",
+  "gas_fee_amount": "0.000045",
+  "gas_fee_advanced": false,
+  "network_fee": "0.05",
+  "service_fee": "0.10",
+  "base_fee": "0.01",
   "token": "USDC",
   "token_address": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
   "chain": "eip155:11155111",
   "network": "sepolia",
   "status": "payment-finalized",
-  "created_at": "2024-03-01T10:00:00Z",
+  "created_at": "2026-03-01T10:00:00Z",
   "tx_signature": "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab",
-  "completed_at": "2024-03-01T10:01:30Z"
+  "completed_at": "2026-03-01T10:03:00Z",
+  "included_at": "2026-03-01T10:00:30Z",
+  "status_reason": "Block finalized by custody confirmed"
 }
 ```
 
-### Failure
+### Failure (`payment-failed`)
 
 ```json
 {
   "event_type": "payment",
-  "payment_request_id": "PAY-REQ-20240301-001",
+  "payment_request_id": "PAY-REQ-20240301-002",
   "request_id": "req_20240301_def456",
-  "cart_mandate_id": "ORDER-20240301-001",
+  "cart_mandate_id": "ORDER-20240301-002",
   "payer_address": "0x1234567890abcdef1234567890abcdef12345678",
-  "amount": "15000000",
+  "to_pay_address": "0xabcdef1234567890abcdef1234567890abcdef12",
+  "amount": "10.01",
+  "order_amount": "10.01",
+  "product_amount": "10.00",
+  "pay_amount": "10.01",
+  "usd_amount": "10.01",
+  "gas_fee": "0.006",
+  "gas_fee_amount": "0.075",
+  "gas_fee_advanced": true,
+  "network_fee": "0.006",
+  "service_fee": "0.001",
+  "base_fee": "0.01",
   "token": "USDC",
-  "token_address": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
-  "chain": "eip155:11155111",
-  "network": "sepolia",
+  "token_address": "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
+  "chain": "eip155:177",
+  "network": "hashkey",
   "status": "payment-failed",
-  "created_at": "2024-03-01T10:00:00Z",
-  "status_reason": "Transaction reverted on chain"
+  "created_at": "2026-03-01T10:00:00Z",
+  "status_reason": "timeout reconciliation: no tx_signature, broadcast never succeeded"
 }
 ```
 
@@ -188,7 +223,7 @@ Only the status code is inspected.
 
 **Best practices**
 
-- Validate business fields (`amount`, `token`, `cart_mandate_id`) before side effects
+- Validate business fields (`order_amount`, `pay_amount`, `token`, `cart_mandate_id`) before side effects
 - Handlers must be **idempotent**—the same `request_id` may arrive more than once due to retries
 
 ---

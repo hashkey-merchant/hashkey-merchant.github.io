@@ -8,7 +8,7 @@
 
 `webhook_url` 綁定於應用程式憑證（AppCredential）層級，透過商戶後台設定：
 
-1. 登入商戶後台，進入「應用程式管理」
+1. 登入商戶後台，進入「我的賬戶」
 2. 選擇對應應用程式，點擊「編輯設定」
 3. 填寫「支付結果回呼地址」（`webhook_url`）並儲存，必須使用 HTTPS
 
@@ -103,6 +103,8 @@ func verifyWebhookSignature(r *http.Request, rawBody []byte, appSecret string) e
 
 ## 回呼參數
 
+金額、費用相關欄位均為幣本位字串（非整數最小單位），與[支付記錄欄位](api-reference.md#支付記錄欄位說明)含義一致。
+
 ### 公共欄位
 
 | 欄位 | 類型 | 說明 | 範例 |
@@ -111,27 +113,36 @@ func verifyWebhookSignature(r *http.Request, rawBody []byte, appSecret string) e
 | `payment_request_id` | string | 支付請求 ID（ID2） | `PAY-REQ-20240301-001` |
 | `request_id` | string | 支付唯一識別（ID5） | `req_20240301_abc123` |
 | `cart_mandate_id` | string | 訂單 ID（ID1） | `ORDER-20240301-001` |
-| `payer_address` | string | 付款人錢包地址 | `0x1234...abcd` |
-| `amount` | string | 支付金額（最小單位） | `"15000000"` |
-| `token` | string | 代幣符號 | `USDC` |
+| `payer_address` | string | 付款人錢包地址 | `0x1234...5678` |
+| `to_pay_address` | string | 收款地址 | `0xabcd...ef12` |
+| `amount` | string | 支付金額（幣本位），與 `pay_amount` 相同 | `"100.30"` |
+| `order_amount` | string | 訂單金額（幣本位），即商品金額加額外費用 | `"100.00"` |
+| `product_amount` | string | 商品金額（幣本位） | `"99.00"` |
+| `pay_amount` | string | 支付數量（幣本位） | `"100.30"` |
+| `usd_amount` | string | 金額（USD） | `"100.25"` |
+| `gas_fee` | string | Gas 費用 | `"0.05"` |
+| `gas_fee_amount` | string | Gas 費用金額 | `"0.000045"` |
+| `gas_fee_advanced` | bool | 是否由商戶墊付 Gas 費用 | `false` |
+| `network_fee` | string | 網絡費用 | `"0.05"` |
+| `service_fee` | string | 服務費用 | `"0.10"` |
+| `base_fee` | string | 基礎費用 | `"0.01"` |
+| `token` | string | 代幣 | `USDC` |
 | `token_address` | string | 代幣合約地址 | `0x1c7D...` |
 | `chain` | string | 鏈識別（CAIP-2 格式） | `eip155:11155111` |
 | `network` | string | 所屬網絡 | `sepolia` |
 | `status` | string | 支付狀態 | `payment-included`／`payment-safe`／`payment-finalized`／`payment-failed` |
-| `created_at` | string | 建立時間（RFC 3339） | `2024-03-01T10:00:00Z` |
+| `created_at` | string | 建立時間（RFC 3339） | `2026-03-01T10:00:00Z` |
+| `status_reason` | string | 狀態原因；成功時為確認說明，失敗時為失敗原因 | `Block finalized by custody confirmed` |
 
 ### 成功附加欄位
 
-| 欄位 | 類型 | 說明 |
-|------|------|------|
-| `tx_signature` | string | 鏈上交易雜湊 |
-| `completed_at` | string | 支付完成時間（RFC 3339） |
-
-### 失敗附加欄位
+交易已上鏈時返回（`payment-included`／`payment-safe`／`payment-finalized`）：
 
 | 欄位 | 類型 | 說明 |
 |------|------|------|
-| `status_reason` | string | 失敗原因描述 |
+| `tx_signature` | string | 鏈上交易 Hash |
+| `included_at` | string | 交易被打包進區塊的時間（RFC 3339） |
+| `completed_at` | string | 支付完成時間（RFC 3339）；`payment-finalized` 時返回 |
 
 ---
 
@@ -146,35 +157,59 @@ func verifyWebhookSignature(r *http.Request, rawBody []byte, appSecret string) e
   "request_id": "req_20240301_abc123",
   "cart_mandate_id": "ORDER-20240301-001",
   "payer_address": "0x1234567890abcdef1234567890abcdef12345678",
-  "amount": "15000000",
+  "to_pay_address": "0xabcdef1234567890abcdef1234567890abcdef12",
+  "amount": "100.30",
+  "order_amount": "100.00",
+  "product_amount": "99.00",
+  "pay_amount": "100.30",
+  "usd_amount": "100.25",
+  "gas_fee": "0.05",
+  "gas_fee_amount": "0.000045",
+  "gas_fee_advanced": false,
+  "network_fee": "0.05",
+  "service_fee": "0.10",
+  "base_fee": "0.01",
   "token": "USDC",
   "token_address": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
   "chain": "eip155:11155111",
   "network": "sepolia",
   "status": "payment-finalized",
-  "created_at": "2024-03-01T10:00:00Z",
+  "created_at": "2026-03-01T10:00:00Z",
   "tx_signature": "0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab",
-  "completed_at": "2024-03-01T10:01:30Z"
+  "completed_at": "2026-03-01T10:03:00Z",
+  "included_at": "2026-03-01T10:00:30Z",
+  "status_reason": "Block finalized by custody confirmed"
 }
 ```
 
-### 支付失敗
+### 支付失敗（`payment-failed`）
 
 ```json
 {
   "event_type": "payment",
-  "payment_request_id": "PAY-REQ-20240301-001",
+  "payment_request_id": "PAY-REQ-20240301-002",
   "request_id": "req_20240301_def456",
-  "cart_mandate_id": "ORDER-20240301-001",
+  "cart_mandate_id": "ORDER-20240301-002",
   "payer_address": "0x1234567890abcdef1234567890abcdef12345678",
-  "amount": "15000000",
+  "to_pay_address": "0xabcdef1234567890abcdef1234567890abcdef12",
+  "amount": "10.01",
+  "order_amount": "10.01",
+  "product_amount": "10.00",
+  "pay_amount": "10.01",
+  "usd_amount": "10.01",
+  "gas_fee": "0.006",
+  "gas_fee_amount": "0.075",
+  "gas_fee_advanced": true,
+  "network_fee": "0.006",
+  "service_fee": "0.001",
+  "base_fee": "0.01",
   "token": "USDC",
-  "token_address": "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
-  "chain": "eip155:11155111",
-  "network": "sepolia",
+  "token_address": "0xabcdefabcdefabcdefabcdefabcdefabcdefabcd",
+  "chain": "eip155:177",
+  "network": "hashkey",
   "status": "payment-failed",
-  "created_at": "2024-03-01T10:00:00Z",
-  "status_reason": "Transaction reverted on chain"
+  "created_at": "2026-03-01T10:00:00Z",
+  "status_reason": "timeout reconciliation: no tx_signature, broadcast never succeeded"
 }
 ```
 
@@ -195,7 +230,7 @@ Content-Type: application/json
 
 **注意事項：**
 
-- 收到回呼後應先校驗業務資料（`amount`、`token`、`cart_mandate_id` 是否與本地記錄一致），再進行後續處理
+- 收到回呼後應先校驗業務資料（`order_amount`、`pay_amount`、`token`、`cart_mandate_id` 是否與本地記錄一致），再進行後續處理
 - 回呼處理邏輯應保持**冪等**：同一 `request_id` 可能因重試多次送達，請勿重複出貨／扣款
 
 ---

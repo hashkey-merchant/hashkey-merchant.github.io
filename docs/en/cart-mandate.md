@@ -13,17 +13,30 @@ The Cart Mandate is the core payload: order metadata, payment methods, line item
       "id": "ORDER-001",
       "user_cart_confirmation_required": true,
       "payment_request": {
-        "method_data": [{
-          "supported_methods": "https://www.x402.org/",
-          "data": {
-            "x402Version": 2,
-            "network": "sepolia",
-            "chain_id": 11155111,
-            "contract_address": "0x1c7D...",
-            "pay_to": "0x99c1...",
-            "coin": "USDC"
+        "method_data": [
+          {
+            "supported_methods": "https://www.x402.org/",
+            "data": {
+              "x402Version": 2,
+              "network": "sepolia",
+              "chain_id": 11155111,
+              "contract_address": "0x1c7D...",
+              "pay_to": "0x99c1...",
+              "coin": "USDC"
+            }
+          },
+          {
+            "supported_methods": "https://www.x402.org/",
+            "data": {
+              "x402Version": 2,
+              "network": "sepolia",
+              "chain_id": 11155111,
+              "contract_address": "0x3f3F...",
+              "pay_to": "0x99c1...",
+              "coin": "USDT"
+            }
           }
-        }],
+        ],
         "details": {
           "id": "PAY-REQ-001",
           "display_items": [
@@ -33,7 +46,23 @@ The Cart Mandate is the core payload: order metadata, payment methods, line item
           "total": {
             "label": "Total",
             "amount": {"currency": "USD", "value": "15.00"}
-          }
+          },
+          "modifiers": [
+            {
+              "total": {"currency": "USD", "value": "16.00"},
+              "additional_display_items": [
+                {
+                  "label": "Service fee",
+                  "amount": {"currency": "USD", "value": "1.00"},
+                  "pending": true,
+                  "refund_period": 0
+                }
+              ],
+              "data": {
+                "method_data_indexes": [0, 1]
+              }
+            }
+          ]
         }
       },
       "cart_expiry": "2024-03-01T12:00:00Z",
@@ -81,10 +110,42 @@ Each `method_data` entry describes one accepted payment method. The gateway curr
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `id` | string | Yes | `payment_request_id` (ID2) |
-| `display_items` | array | No | Line items |
-| `total` | object | Yes | Total with `label` + `amount` |
+| `display_items` | array | No | Merchandise line items |
+| `total` | object | Yes | Merchandise total with `label` + `amount` |
 | `shipping_options` | array | No | Shipping options |
 | `modifiers` | array | No | Modifiers |
+
+### `modifiers`
+
+A modifier adds charges to the merchandise amount for specific payment methods. Each modifier uses the following fields:
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `modifiers[].total` | object | Yes | Final payment amount (`currency` + `value`) after additional items are added |
+| `modifiers[].additional_display_items` | array | Yes | Additional charges; multiple entries are accepted and shown as one aggregated charge on Checkout |
+| `modifiers[].additional_display_items[].label` | string | Yes | Description of the additional charge |
+| `modifiers[].additional_display_items[].amount` | object | Yes | Additional charge amount (`currency` + `value`) |
+| `modifiers[].additional_display_items[].pending` | bool | Yes | Must be `true` |
+| `modifiers[].additional_display_items[].refund_period` | int | Yes | Not currently supported; set to `0` |
+| `modifiers[].data` | object | Yes | Payment-method matching data |
+| `modifiers[].data.method_data_indexes` | array of int | Yes | Zero-based indexes into `payment_request.method_data` |
+
+All currencies in `details.total`, `display_items`, modifier `total`, and `additional_display_items` must be `USD`.
+
+#### Amount validation
+
+The gateway validates amounts using these rules:
+
+1. For each modifier, `modifier.total.value = details.total.amount.value + sum(modifier.additional_display_items[].amount.value)`.
+2. If `display_items` is present, `sum(details.display_items[].amount.value) = details.total.amount.value`.
+
+In the full example, the merchandise amount is `15.00`, the additional charge is `1.00`, and the final payment amount is `16.00`.
+
+#### Payment-method matching
+
+`data.method_data_indexes` determines which entries in the outer `payment_request.method_data` array can use the modifier. Each value must be a valid zero-based index in that array. A modifier is applied only when the selected payment method matches one of those indexes.
+
+For example, `[0, 1]` matches both payment methods in the full example. With two `method_data` entries, indexes `-1` and `2` are invalid.
 
 ### `cart_expiry` guidance
 

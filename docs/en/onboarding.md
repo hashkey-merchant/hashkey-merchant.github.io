@@ -36,7 +36,6 @@ Provide the following to operations so they can create an organization invite:
 | `email` | Yes | Admin email | `admin@acme.com` |
 | `description` | No | Description | `Acme payments team` |
 | `default_language` | Yes | Default language | `zh-HK` / `en` |
-| `service_type` | Yes | Fee model | `free` / `price_include` / `price_extra` |
 | `service_rate` | Yes | Service rate (4 decimal places) | `0.0000` |
 | `public_key` | Yes | Merchant public key (PEM) | `-----BEGIN PUBLIC KEY-----...` |
 | `supported_chain_tokens` | Yes | Supported chain/token list (≥1 row) | See below |
