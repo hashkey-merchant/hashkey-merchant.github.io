@@ -98,6 +98,10 @@
 
 ## 更新日誌
 
+### v2.2.0 — 2026-10-12
+
+- 新增支援支付幣種與網絡：BSC Testnet（USDT）、Base Sepolia（USDC）、Arbitrum Sepolia（USDC、USDT）
+
 ### v2.1.0 — 2026-08-12
 
 - 新增 `details.modifiers`，支援按支付方式設定額外費用、金額校驗及 `method_data_indexes` 匹配

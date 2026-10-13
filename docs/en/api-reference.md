@@ -62,16 +62,18 @@ Production (mainnet tokens only): `https://hsp.hashkey.com`
           "total": {"label": "Total", "amount": {"currency": "USD", "value": "15.00"}},
           "modifiers": [
             {
-              "total": {"currency": "USD", "value": "16.00"},
+              "supported_methods": "https://www.x402.org/",
+              "data": {"method_data_indexes": [0]},
               "additional_display_items": [
                 {
                   "label": "Service fee",
-                  "amount": {"currency": "USD", "value": "1.00"},
-                  "pending": true,
-                  "refund_period": 0
+                  "amount": {"currency": "USD", "value": "1.00"}
                 }
               ],
-              "data": {"method_data_indexes": [0]}
+              "total": {
+                "label": "Amount due",
+                "amount": {"currency": "USD", "value": "16.00"}
+              }
             }
           ]
         }
@@ -102,21 +104,20 @@ Production (mainnet tokens only): `https://hsp.hashkey.com`
 | `details.id` | string | Yes | `payment_request_id` (ID2) |
 | `details.display_items` | array | No | Line items |
 | `details.total` | object | Yes | Merchandise total (`label` + `amount`); currency must be `USD` |
-| `details.modifiers` | array | No | Additional charges scoped to selected payment methods |
-| `details.modifiers[].total` | object | Yes | Final payment amount (`currency` + `value`); currency must be `USD` |
-| `details.modifiers[].additional_display_items` | array | Yes | Additional charges; Checkout aggregates multiple entries |
+| `details.modifiers` | array | No | Additional charges applied by payment protocol |
+| `details.modifiers[].supported_methods` | string | Yes | Protocol this modifier applies to. Currently `"https://www.x402.org/"`. It does not describe a chain, contract, or payee |
+| `details.modifiers[].additional_display_items` | array | Yes | Additional charges; must be non-empty. Checkout aggregates multiple entries |
 | `details.modifiers[].additional_display_items[].label` | string | Yes | Additional charge description |
 | `details.modifiers[].additional_display_items[].amount` | object | Yes | Additional charge amount; currency must be `USD` |
-| `details.modifiers[].additional_display_items[].pending` | bool | Yes | Must be `true` |
-| `details.modifiers[].additional_display_items[].refund_period` | int | Yes | Not currently supported; set to `0` |
-| `details.modifiers[].data.method_data_indexes` | array of int | Yes | Valid zero-based indexes into `payment_request.method_data` |
+| `details.modifiers[].total` | object | No | Amount due as `label` + `amount` (`currency` + `value`). When present, the value must be greater than 0 and the currency must be `USD` |
+| `details.modifiers[].data.method_data_indexes` | array of int | No | Zero-based indexes into `payment_request.method_data`. When omitted, the modifier applies to every `method_data` entry with the same normalized `supported_methods` |
 | `contents.cart_expiry` | string | Yes | RFC 3339 expiry (~2h typical) |
 | `contents.merchant_name` | string | Yes | Merchant display name |
 | `merchant_authorization` | string | Yes | ES256K JWT — [Authentication](authentication.md) |
 | `redirect_url` | string | No | Post-payment redirect |
 
 > [!IMPORTANT]
-> For each modifier, `modifier.total.value` must equal `details.total.amount.value` plus the sum of `additional_display_items[].amount.value`. If `display_items` is present, its amount sum must equal `details.total.amount.value`. A modifier applies only to the payment methods referenced by `method_data_indexes`. See [Building a Cart Mandate](cart-mandate.md#modifiers) for details.
+> `additional_display_items` must be non-empty. When `modifier.total` is present, `modifier.total.amount.value` must be greater than 0 and equal `details.total.amount.value` plus the additional items. `10.0` and `10.00` compare equal as decimals. Omitting `method_data_indexes` applies the modifier to every `method_data` entry with the same normalized `supported_methods`. Different additional charges require explicit indexes, and the same index cannot be matched by two modifiers. An option that matches a modifier with `total` uses `modifier.total`; otherwise it uses the root `details.total`. Violations return `10001`. See [Building a Cart Mandate](cart-mandate.md#modifiers) for details.
 
 ### Success response
 

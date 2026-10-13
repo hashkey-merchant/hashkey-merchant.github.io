@@ -15,7 +15,7 @@ Through standardized RESTful APIs, your backend can quickly create payment order
 | **One-time payment orders**    | For e-commerce checkouts, one-off fees, and similar flows—each order maps to a single payment                |
 | **Reusable payment orders**    | For device rental, vending, subscription charges—multiple independent payments under one mandate             |
 | **Webhook notifications**      | Push callbacks after a terminal state, with HMAC-SHA256 verification and up to 6 exponential-backoff retries |
-| **Multi-chain & multi-asset**  | Ethereum, HashKey Chain, and more; USDC, USDT, and other major stablecoins                                   |
+| **Multi-chain & multi-asset**  | Mainnet: Ethereum and HashKey Chain. Testnet also includes BSC, Base Sepolia, and Arbitrum Sepolia. Assets: USDC, USDT, and HSK |
 | **HMAC-SHA256 authentication** | All Merchant APIs are protected with HMAC signatures and replay protection                                   |
 | **ES256K JWT signing**         | Merchant authorization uses secp256k1, aligned with the broader blockchain ecosystem                         |
 

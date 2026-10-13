@@ -49,17 +49,19 @@ The Cart Mandate is the core payload: order metadata, payment methods, line item
           },
           "modifiers": [
             {
-              "total": {"currency": "USD", "value": "16.00"},
+              "supported_methods": "https://www.x402.org/",
+              "data": {
+                "method_data_indexes": [0, 1]
+              },
               "additional_display_items": [
                 {
                   "label": "Service fee",
-                  "amount": {"currency": "USD", "value": "1.00"},
-                  "pending": true,
-                  "refund_period": 0
+                  "amount": {"currency": "USD", "value": "1.00"}
                 }
               ],
-              "data": {
-                "method_data_indexes": [0, 1]
+              "total": {
+                "label": "Amount due",
+                "amount": {"currency": "USD", "value": "16.00"}
               }
             }
           ]
@@ -117,35 +119,147 @@ Each `method_data` entry describes one accepted payment method. The gateway curr
 
 ### `modifiers`
 
-A modifier adds charges to the merchandise amount for specific payment methods. Each modifier uses the following fields:
+A modifier adds charges on top of the merchandise amount. `supported_methods` declares which payment protocol the modifier applies to. It does not describe a chain, contract, or payee.
+
+```json
+{
+  "supported_methods": "https://www.x402.org/",
+  "data": {
+    "method_data_indexes": [1]
+  },
+  "additional_display_items": [
+    {
+      "label": "Network fee",
+      "amount": { "currency": "USD", "value": "1.00" }
+    }
+  ],
+  "total": {
+    "label": "Amount due",
+    "amount": { "currency": "USD", "value": "11.00" }
+  }
+}
+```
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `modifiers[].total` | object | Yes | Final payment amount (`currency` + `value`) after additional items are added |
-| `modifiers[].additional_display_items` | array | Yes | Additional charges; multiple entries are accepted and shown as one aggregated charge on Checkout |
+| `modifiers[].supported_methods` | string | Yes | Payment protocol. Currently `"https://www.x402.org/"`. Comparison trims surrounding whitespace and a trailing `/`, so `https://www.x402.org` is the same method |
+| `modifiers[].additional_display_items` | array | Yes | Additional charges; must be non-empty. Multiple entries are shown as one aggregated charge on Checkout |
 | `modifiers[].additional_display_items[].label` | string | Yes | Description of the additional charge |
 | `modifiers[].additional_display_items[].amount` | object | Yes | Additional charge amount (`currency` + `value`) |
-| `modifiers[].additional_display_items[].pending` | bool | Yes | Must be `true` |
-| `modifiers[].additional_display_items[].refund_period` | int | Yes | Not currently supported; set to `0` |
-| `modifiers[].data` | object | Yes | Payment-method matching data |
-| `modifiers[].data.method_data_indexes` | array of int | Yes | Zero-based indexes into `payment_request.method_data` |
+| `modifiers[].total` | object | No | Amount due after additional charges: `label` + `amount` (`currency` + `value`). When present, the value must be greater than 0 |
+| `modifiers[].data` | object | No | Payment-method matching data |
+| `modifiers[].data.method_data_indexes` | array of int | No | Zero-based indexes into `payment_request.method_data`. When omitted, the modifier applies to every `method_data` entry with the same normalized `supported_methods` |
 
-All currencies in `details.total`, `display_items`, modifier `total`, and `additional_display_items` must be `USD`.
+All currencies in `details.total`, `display_items`, modifier `total.amount`, and `additional_display_items` must be `USD`. `value` is a parseable decimal string. `10.0` and `10.00` compare equal as decimal values.
 
 #### Amount validation
 
 The gateway validates amounts using these rules:
 
-1. For each modifier, `modifier.total.value = details.total.amount.value + sum(modifier.additional_display_items[].amount.value)`.
-2. If `display_items` is present, `sum(details.display_items[].amount.value) = details.total.amount.value`.
+1. If `display_items` is non-empty, `sum(details.display_items[].amount.value) = details.total.amount.value`.
+2. When `modifier.total` is present, it must be greater than 0 and:
 
-In the full example, the merchandise amount is `15.00`, the additional charge is `1.00`, and the final payment amount is `16.00`.
+```text
+modifier.total = details.total + sum(additional_display_items)
+```
+
+That is, `modifier.total.amount.value` equals `details.total.amount.value` plus the sum of `additional_display_items[].amount.value`.
+
+The effective total for a payment option is:
+
+1. `modifier.total`, when the option matches a modifier that provides `total`.
+2. The root `details.total`, when the matched modifier has no `total`, or when the option matches no modifier.
+
+In the full example, the merchandise amount is `15.00` and the additional charge is `1.00`. Both payment options match that modifier, so each effective total is `16.00`.
 
 #### Payment-method matching
 
-`data.method_data_indexes` determines which entries in the outer `payment_request.method_data` array can use the modifier. Each value must be a valid zero-based index in that array. A modifier is applied only when the selected payment method matches one of those indexes.
+`data.method_data_indexes` is a zero-based integer array that selects `method_data` indexes.
 
-For example, `[0, 1]` matches both payment methods in the full example. With two `method_data` entries, indexes `-1` and `2` are invalid.
+| Form | Match |
+|------|-------|
+| `"method_data_indexes": [1]` | Only `method_data[1]` |
+| `"method_data_indexes": [0, 2]` | Indexes 0 and 2 |
+| Field omitted | Every `method_data` entry with the same normalized `supported_methods` |
+
+Explicit indexes must all be true at once:
+
+- The array is non-empty.
+- Every item is a unique, non-negative, in-range integer.
+- The referenced entry's `supported_methods` matches the modifier.
+- Expansion matches at least one entry.
+- The same index is not matched by two modifiers.
+
+When x402 options need different additional charges, set `method_data_indexes` explicitly. Omitting the indexes applies that modifier to every option of the same protocol.
+
+A violation returns HTTP 400 and error code `10001`. No payment session is created.
+
+#### Different charges per option
+
+The root merchandise amount is 10 USD. The Base option at index 1 adds 1 USD, so the index must be set explicitly. Index 0 does not match this modifier, and its effective amount stays at the root `10.00`.
+
+```json
+{
+  "method_data": [
+    {
+      "supported_methods": "https://www.x402.org/",
+      "data": {
+        "x402Version": 2,
+        "network": "ethereum",
+        "chain_id": 1,
+        "contract_address": "0xTokenOnEthereum",
+        "pay_to": "0xReceiverA",
+        "coin": "USDC"
+      }
+    },
+    {
+      "supported_methods": "https://www.x402.org/",
+      "data": {
+        "x402Version": 2,
+        "network": "base",
+        "chain_id": 8453,
+        "contract_address": "0xTokenOnBase",
+        "pay_to": "0xReceiverB",
+        "coin": "USDC"
+      }
+    }
+  ],
+  "details": {
+    "id": "PAY-REQ-001",
+    "display_items": [
+      {
+        "label": "Item",
+        "amount": { "currency": "USD", "value": "10.00" }
+      }
+    ],
+    "total": {
+      "label": "Merchandise total",
+      "amount": { "currency": "USD", "value": "10.00" }
+    },
+    "modifiers": [
+      {
+        "supported_methods": "https://www.x402.org/",
+        "data": { "method_data_indexes": [1] },
+        "additional_display_items": [
+          {
+            "label": "Base network fee",
+            "amount": { "currency": "USD", "value": "1.00" }
+          }
+        ],
+        "total": {
+          "label": "Amount due",
+          "amount": { "currency": "USD", "value": "11.00" }
+        }
+      }
+    ]
+  }
+}
+```
+
+| Selected option | Effective amount |
+|-----------------|-----------------:|
+| `method_data[0]` | 10.00 USD |
+| `method_data[1]` | 11.00 USD |
 
 ### `cart_expiry` guidance
 

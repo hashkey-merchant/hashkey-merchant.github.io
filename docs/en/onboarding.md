@@ -44,9 +44,9 @@ Provide the following to operations so they can create an organization invite:
 
 | Network | Chain ID | Token | Contract | Decimals | Stablecoin | Protocol |
 |---------|----------|-------|----------|----------|------------|----------|
-| ethereum | 1 | USDC | `0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48` | 6 | Yes | EIP-3009 |
-| ethereum | 1 | USDT | `0xdac17f958d2ee523a2206206994597c13d831ec7` | 6 | Yes | Permit2 |
 | ethereum | 1 | HSK | `0xe7c6bf469e97eeb0bfb74c8dbff5bd47d4c1c98a` | 18 | No | Permit2 |
+| ethereum | 1 | USDT | `0xdac17f958d2ee523a2206206994597c13d831ec7` | 6 | Yes | Permit2 |
+| ethereum | 1 | USDC | `0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48` | 6 | Yes | EIP-3009 |
 | hashkey | 177 | USDC | `0x054ed45810DbBAb8B27668922D110669c9D88D0a` | 6 | Yes | EIP-3009 |
 | hashkey | 177 | USDT | `0xF1B50eD67A9e2CC94Ad3c477779E2d4cBfFf9029` | 6 | Yes | Permit2 |
 
@@ -57,8 +57,12 @@ Provide the following to operations so they can create an organization invite:
 | sepolia | 11155111 | USDC | `0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238` | 6 | Yes | EIP-3009 |
 | sepolia | 11155111 | USDT | `0xff5588b3b38dff1b4b49bfdcbf985e84d8751a0e` | 6 | Yes | Permit2 |
 | sepolia | 11155111 | HSK | `0x31bdac8e4b897e470b70ebe286f94245baa793c2` | 18 | No | Permit2 |
+| base-sepolia | 84532 | USDC | `0x036CbD53842c5426634e7929541eC2318f3dCF7e` | 6 | Yes | EIP-3009 |
 | hashkey-testnet | 133 | USDC | `0x8FE3cB719Ee4410E236Cd6b72ab1fCDC06eF53c6` | 6 | Yes | EIP-3009 |
 | hashkey-testnet | 133 | USDT | `0x372325443233fEbaC1F6998aC750276468c83CC6` | 6 | Yes | Permit2 |
+| bsc-testnet | 97 | USDT | `0xBDec532A2675D3a6a091624b1FE878Ff58a43997` | 18 | Yes | Permit2 |
+| arbitrum-sepolia | 421614 | USDT | `0xc52f0FD29292393D253420205BF1dDCc5a0ED224` | 6 | Yes | Permit2 |
+| arbitrum-sepolia | 421614 | USDC | `0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d` | 6 | Yes | EIP-3009 |
 
 After the invite is created, the admin receives an email link to finish registration and bind the organization.
 

@@ -55,17 +55,19 @@ Cart Mandate 是核心支付請求資料結構，包含訂單資訊、支付方�
           },
           "modifiers": [
             {
-              "total": { "currency": "USD", "value": "16.00" },
+              "supported_methods": "https://www.x402.org/",
+              "data": {
+                "method_data_indexes": [0, 1]
+              },
               "additional_display_items": [
                 {
                   "label": "服務費",
-                  "amount": { "currency": "USD", "value": "1.00" },
-                  "pending": true,
-                  "refund_period": 0
+                  "amount": { "currency": "USD", "value": "1.00" }
                 }
               ],
-              "data": {
-                "method_data_indexes": [0, 1]
+              "total": {
+                "label": "應付合計",
+                "amount": { "currency": "USD", "value": "16.00" }
               }
             }
           ]
@@ -123,35 +125,147 @@ Cart Mandate 是核心支付請求資料結構，包含訂單資訊、支付方�
 
 ### modifiers（支付修改器）
 
-支付修改器可為指定支付方式在商品金額上加入額外費用。每個修改器包含以下欄位：
+支付修改器可在商品金額上加入額外費用。`supported_methods` 只聲明此修改器作用於哪一類支付協議，不單獨描述鏈、合約或收款地址。
+
+```json
+{
+  "supported_methods": "https://www.x402.org/",
+  "data": {
+    "method_data_indexes": [1]
+  },
+  "additional_display_items": [
+    {
+      "label": "網絡服務費",
+      "amount": { "currency": "USD", "value": "1.00" }
+    }
+  ],
+  "total": {
+    "label": "應付合計",
+    "amount": { "currency": "USD", "value": "11.00" }
+  }
+}
+```
 
 | 欄位 | 類型 | 必填 | 說明 |
 | ---- | ---- | ---- | ---- |
-| `modifiers[].total` | object | 是 | 加入額外費用後的最終支付金額（`currency` + `value`） |
-| `modifiers[].additional_display_items` | array | 是 | 額外費用清單；可傳入多項，Checkout 頁面會匯總顯示 |
+| `modifiers[].supported_methods` | string | 是 | 支付協議標識。現時為 `"https://www.x402.org/"`。比較時去掉首尾空白和尾部 `/`，因此 `https://www.x402.org` 與帶尾斜線視為同一方法 |
+| `modifiers[].additional_display_items` | array | 是 | 額外費用清單，必須非空；可傳入多項，Checkout 頁面會匯總顯示 |
 | `modifiers[].additional_display_items[].label` | string | 是 | 額外費用說明 |
 | `modifiers[].additional_display_items[].amount` | object | 是 | 額外費用金額（`currency` + `value`） |
-| `modifiers[].additional_display_items[].pending` | bool | 是 | 固定為 `true` |
-| `modifiers[].additional_display_items[].refund_period` | int | 是 | 暫不支援；請設為 `0` |
-| `modifiers[].data` | object | 是 | 支付方式匹配資料 |
-| `modifiers[].data.method_data_indexes` | int array | 是 | `payment_request.method_data` 的零起始索引 |
+| `modifiers[].total` | object | 否 | 加入額外費用後的應付合計，結構為 `label` + `amount`（`currency` + `value`）。提供時必須大於 0 |
+| `modifiers[].data` | object | 否 | 支付方式匹配資料 |
+| `modifiers[].data.method_data_indexes` | int array | 否 | `payment_request.method_data` 的零起始索引。省略時作用於所有規範化 `supported_methods` 相同的 `method_data` |
 
-`details.total`、`display_items`、修改器 `total` 及 `additional_display_items` 的幣種均固定為 `USD`。
+`details.total`、`display_items`、修改器 `total.amount` 及 `additional_display_items` 的幣種均固定為 `USD`。`value` 是可解析的十進制字串；`10.0` 與 `10.00` 按數值比較，視為相等。
 
 #### 金額校驗
 
 支付網關會按以下規則校驗金額：
 
-1. 每個修改器須符合 `modifier.total.value = details.total.amount.value + sum(modifier.additional_display_items[].amount.value)`。
-2. 如有傳入 `display_items`，須符合 `sum(details.display_items[].amount.value) = details.total.amount.value`。
+1. 如有傳入非空 `display_items`，須符合 `sum(details.display_items[].amount.value) = details.total.amount.value`。
+2. 提供 `modifier.total` 時，它必須大於 0，並且：
 
-在完整示例中，商品金額為 `15.00`、額外費用為 `1.00`，最終支付金額為 `16.00`。
+```text
+modifier.total = details.total + sum(additional_display_items)
+```
+
+即 `modifier.total.amount.value` 等於 `details.total.amount.value` 加上 `additional_display_items[].amount.value` 之和。
+
+某個支付選項的有效總額按以下規則確定：
+
+1. 該選項命中修改器，且修改器提供了 `total`：使用 `modifier.total`。
+2. 命中但未提供 `total`，或沒有命中任何修改器：使用根級 `details.total`。
+
+在完整示例中，商品金額為 `15.00`、額外費用為 `1.00`。兩個支付選項都命中該修改器，有效總額均為 `16.00`。
 
 #### 支付方式匹配
 
-`data.method_data_indexes` 指定外層 `payment_request.method_data` 陣列中可使用此修改器的支付方式。每個值必須是該陣列內有效的零起始索引；只有用戶選擇的支付方式匹配其中一個索引時，才會套用此修改器。
+`data.method_data_indexes` 是從 0 開始的整數陣列，用來選擇 `method_data` 下標。
 
-例如，`[0, 1]` 會匹配完整示例中的兩種支付方式。當 `method_data` 只有兩項時，索引 `-1` 和 `2` 均無效。
+| 寫法 | 匹配結果 |
+| ---- | -------- |
+| `"method_data_indexes": [1]` | 只作用於 `method_data[1]` |
+| `"method_data_indexes": [0, 2]` | 同時作用於下標 0 和 2 |
+| 不提供該欄位 | 作用於所有規範化 `supported_methods` 相同的 `method_data` |
+
+顯式索引必須同時滿足：
+
+- 陣列非空；
+- 每一項都是唯一、非負、未越界的整數；
+- 被引用項的 `supported_methods` 與修改器一致；
+- 展開後至少命中一項；
+- 同一個下標不能被兩個修改器命中。
+
+多個 x402 選項需要不同附加費用時，必須顯式填寫 `method_data_indexes`。省略索引會把該修改器套用到全部相同協議的選項。
+
+違反上述規則時，建立接口返回 HTTP 400 和錯誤碼 `10001`，不會建立支付會話。
+
+#### 多選項差價示例
+
+根級商品金額為 10 USD。下標 1 的 Base 支付額外收取 1 USD，因此必須顯式指定索引。下標 0 未命中該修改器，有效金額仍為根級 `10.00`。
+
+```json
+{
+  "method_data": [
+    {
+      "supported_methods": "https://www.x402.org/",
+      "data": {
+        "x402Version": 2,
+        "network": "ethereum",
+        "chain_id": 1,
+        "contract_address": "0xTokenOnEthereum",
+        "pay_to": "0xReceiverA",
+        "coin": "USDC"
+      }
+    },
+    {
+      "supported_methods": "https://www.x402.org/",
+      "data": {
+        "x402Version": 2,
+        "network": "base",
+        "chain_id": 8453,
+        "contract_address": "0xTokenOnBase",
+        "pay_to": "0xReceiverB",
+        "coin": "USDC"
+      }
+    }
+  ],
+  "details": {
+    "id": "PAY-REQ-001",
+    "display_items": [
+      {
+        "label": "商品",
+        "amount": { "currency": "USD", "value": "10.00" }
+      }
+    ],
+    "total": {
+      "label": "商品合計",
+      "amount": { "currency": "USD", "value": "10.00" }
+    },
+    "modifiers": [
+      {
+        "supported_methods": "https://www.x402.org/",
+        "data": { "method_data_indexes": [1] },
+        "additional_display_items": [
+          {
+            "label": "Base 網絡服務費",
+            "amount": { "currency": "USD", "value": "1.00" }
+          }
+        ],
+        "total": {
+          "label": "應付合計",
+          "amount": { "currency": "USD", "value": "11.00" }
+        }
+      }
+    ]
+  }
+}
+```
+
+| 用戶選擇 | 有效金額 |
+| -------- | -------: |
+| `method_data[0]` | 10.00 USD |
+| `method_data[1]` | 11.00 USD |
 
 ### cart_expiry 有效期建議
 

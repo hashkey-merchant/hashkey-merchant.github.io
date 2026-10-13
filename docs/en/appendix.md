@@ -92,6 +92,10 @@ Canonical output:
 
 ## Changelog
 
+### v2.2.0 — 2026-10-12
+
+- Added payment token and network support for BSC Testnet (USDT), Base Sepolia (USDC), and Arbitrum Sepolia (USDC, USDT)
+
 ### v2.1.0 — 2026-08-12
 
 - Added `details.modifiers` for payment-method-specific additional charges, including amount validation and `method_data_indexes` matching

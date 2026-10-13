@@ -63,16 +63,18 @@ Staging 環境（僅支援主網 token）：`https://merchant-stg.hashkeymerchan
           "total": {"label": "總計", "amount": {"currency": "USD", "value": "15.00"}},
           "modifiers": [
             {
-              "total": {"currency": "USD", "value": "16.00"},
+              "supported_methods": "https://www.x402.org/",
+              "data": {"method_data_indexes": [0]},
               "additional_display_items": [
                 {
                   "label": "服務費",
-                  "amount": {"currency": "USD", "value": "1.00"},
-                  "pending": true,
-                  "refund_period": 0
+                  "amount": {"currency": "USD", "value": "1.00"}
                 }
               ],
-              "data": {"method_data_indexes": [0]}
+              "total": {
+                "label": "應付合計",
+                "amount": {"currency": "USD", "value": "16.00"}
+              }
             }
           ]
         }
@@ -103,21 +105,20 @@ Staging 環境（僅支援主網 token）：`https://merchant-stg.hashkeymerchan
 | `details.id` | string | 是 | 支付請求 ID（`payment_request_id`，ID2） |
 | `details.display_items` | array | 否 | 商品明細清單 |
 | `details.total` | object | 是 | 商品總金額（`label` + `amount`）；幣種固定為 `USD` |
-| `details.modifiers` | array | 否 | 按所選支付方式套用的額外費用 |
-| `details.modifiers[].total` | object | 是 | 最終支付金額（`currency` + `value`）；幣種固定為 `USD` |
-| `details.modifiers[].additional_display_items` | array | 是 | 額外費用清單；Checkout 會匯總顯示多個項目 |
+| `details.modifiers` | array | 否 | 按支付協議套用的額外費用 |
+| `details.modifiers[].supported_methods` | string | 是 | 修改器作用的支付協議。現時為 `"https://www.x402.org/"`，不描述鏈、合約或收款地址 |
+| `details.modifiers[].additional_display_items` | array | 是 | 額外費用清單，必須非空；Checkout 會匯總顯示多個項目 |
 | `details.modifiers[].additional_display_items[].label` | string | 是 | 額外費用說明 |
 | `details.modifiers[].additional_display_items[].amount` | object | 是 | 額外費用金額；幣種固定為 `USD` |
-| `details.modifiers[].additional_display_items[].pending` | bool | 是 | 固定為 `true` |
-| `details.modifiers[].additional_display_items[].refund_period` | int | 是 | 暫不支援；請設為 `0` |
-| `details.modifiers[].data.method_data_indexes` | int array | 是 | `payment_request.method_data` 的有效零起始索引 |
+| `details.modifiers[].total` | object | 否 | 應付合計，結構為 `label` + `amount`（`currency` + `value`）。提供時必須大於 0，幣種固定為 `USD` |
+| `details.modifiers[].data.method_data_indexes` | int array | 否 | `payment_request.method_data` 的零起始索引。省略時作用於所有規範化 `supported_methods` 相同的 `method_data` |
 | `contents.cart_expiry` | string | 是 | 授權過期時間（RFC 3339 格式），建議 2 小時 |
 | `contents.merchant_name` | string | 是 | 商戶名稱 |
 | `merchant_authorization` | string | 是 | 商戶 JWT 簽章（ES256K），詳見 [認證與簽章](authentication.md) |
 | `redirect_url` | string | 否 | 支付完成後跳轉 URL |
 
 > [!IMPORTANT]
-> 每個修改器的 `modifier.total.value` 必須等於 `details.total.amount.value` 加上 `additional_display_items[].amount.value` 的總和。如有傳入 `display_items`，其金額總和必須等於 `details.total.amount.value`。修改器只會套用於 `method_data_indexes` 指定的支付方式。詳情請參閱 [Cart Mandate 組裝](cart-mandate.md#modifiers支付修改器)。
+> `additional_display_items` 必須非空。提供 `modifier.total` 時，`modifier.total.amount.value` 必須大於 0，且等於 `details.total.amount.value` 加上附加項之和；`10.0` 與 `10.00` 按十進制數值視為相等。省略 `method_data_indexes` 時，修改器作用於所有規範化 `supported_methods` 相同的 `method_data`。多個選項附加費用不同時必須顯式填寫索引，且同一個下標不能被兩個修改器命中。命中且提供了 `total` 的選項，有效總額為 `modifier.total`，否則為根級 `details.total`。違反規則時返回 `10001`。詳情請參閱 [Cart Mandate 組裝](cart-mandate.md#modifiers支付修改器)。
 
 ### 成功回應
 
