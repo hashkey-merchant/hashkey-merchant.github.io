@@ -48,7 +48,11 @@ openssl ec -in merchant_private_key.pem -pubout -out merchant_public_key.pem
 | ethereum | 1 | USDT | `0xdac17f958d2ee523a2206206994597c13d831ec7` | 6 | 是 | Permit2 |
 | ethereum | 1 | USDC | `0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48` | 6 | 是 | EIP-3009 |
 | hashkey | 177 | USDC | `0x054ed45810DbBAb8B27668922D110669c9D88D0a` | 6 | 是 | EIP-3009 |
-| hashkey | 177 | USDT | `0xF1B50eD67A9e2CC94Ad3c477779E2d4cBfFf9029` | 6 | 是 | Permit2 |
+| hashkey | 177 | USDT | `0xf1b50ed67a9e2cc94ad3c477779e2d4cbfff9029` | 6 | 是 | Permit2 |
+| base | 8453 | USDC | `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` | 6 | 是 | EIP-3009 |
+| arbitrum | 42161 | USDC | `0xaf88d065e77c8cC2239327C5EDb3A432268e5831` | 6 | 是 | EIP-3009 |
+| arbitrum | 42161 | USDT | `0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9` | 6 | 是 | Permit2 |
+| bsc | 56 | USDT | `0x55d398326f99059fF775485246999027B3197955` | 18 | 是 | Permit2 |
 
 **測試網（Testnet）**
 

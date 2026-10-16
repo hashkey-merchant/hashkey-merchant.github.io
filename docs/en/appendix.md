@@ -92,6 +92,10 @@ Canonical output:
 
 ## Changelog
 
+### v2.3.0 — 2026-10-16
+
+- Added mainnet support for Base (USDC), Arbitrum (USDC, USDT), and BNB Smart Chain (USDT)
+
 ### v2.2.0 — 2026-10-12
 
 - Added payment token and network support for BSC Testnet (USDT), Base Sepolia (USDC), and Arbitrum Sepolia (USDC, USDT)

@@ -15,7 +15,7 @@ HashKey Merchant 是一套完整的加密貨幣支付方案，為商戶提供安
 | **單次支付訂單** | 適用於網購、一次性繳費等場景，每筆訂單獨立發起一次支付 |
 | **可重複支付訂單** | 適用於裝置租賃、自動販賣、訂閱扣款，同一授權下可發起多筆獨立支付 |
 | **Webhook 即時通知** | 支付達終態後主動推送回呼，支援 HMAC-SHA256 簽章驗證，最多 6 次指數退避重試 |
-| **多鏈多幣種** | 主網支援 Ethereum、HashKey Chain；測試網另支援 BSC、Base Sepolia、Arbitrum Sepolia。幣種涵蓋 USDC、USDT、HSK |
+| **多鏈多幣種** | 主網支援 Ethereum、HashKey Chain、Base、Arbitrum、BNB Smart Chain；測試網支援 Ethereum Sepolia、HashKey Chain Testnet、Base Sepolia、Arbitrum Sepolia、BSC Testnet。幣種涵蓋 USDC、USDT、HSK |
 | **HMAC-SHA256 認證** | 所有 Merchant API 均透過 HMAC 簽章保障安全，防重放攻擊 |
 | **ES256K JWT 簽章** | 使用 secp256k1 曲線簽署商戶授權，與區塊鏈生態一致 |
 

@@ -98,6 +98,10 @@
 
 ## 更新日誌
 
+### v2.3.0 — 2026-10-16
+
+- 主網新增 Base（USDC）、Arbitrum（USDC、USDT）、BNB Smart Chain（USDT）
+
 ### v2.2.0 — 2026-10-12
 
 - 新增支援支付幣種與網絡：BSC Testnet（USDT）、Base Sepolia（USDC）、Arbitrum Sepolia（USDC、USDT）
